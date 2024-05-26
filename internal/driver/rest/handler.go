@@ -178,13 +178,61 @@ func (h *Handler) HandleProjects(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) HandleProjectDetail(w http.ResponseWriter, r *http.Request) {
-	// TODO: implement get project detail
+	var req model.GetProjectByIdInput
+	projectIDStr := r.URL.Query().Get("id")
+	projectID, err := strconv.ParseInt(projectIDStr, 10, 64)
+	if err != nil {
+		fmt.Println("error parsing project ID", err)
+		ResponseErrorBadRequest(w, "invalid project ID")
+		return
+	}
+	req.ProjectId = projectID
+
+	// Call the project service to get the project detail
+	project, err := h.ProjectService.GetProjectById(r.Context(), req)
+	if err != nil {
+		fmt.Println("error getting project detail", err)
+		ResponseErrorBadRequest(w, err.Error())
+		return
+	}
+
+	ResponseSuccess(w, project)
 }
 
 func (h *Handler) HandleDonateProject(w http.ResponseWriter, r *http.Request) {
 	// TODO: implement donate to project
+	var req model.DonateToProjectInput
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		fmt.Println("error decoding request", err)
+		ResponseErrorBadRequest(w, "invalid request")
+		return
+	}
+
+	// Call the project service to donate to the project
+	err = h.ProjectService.DonateToProject(r.Context(), req)
+	if err != nil {
+		fmt.Println("error donating to project", err)
+		ResponseErrorBadRequest(w, err.Error())
+		return
+	}
+
+	ResponseSuccess(w, "Donation successful")
 }
 
 func (h *Handler) HandleProjectDonations(w http.ResponseWriter, r *http.Request) {
-	// TODO: implement get project donations
+	var req model.ListProjectDonationInput
+	req.ProjectId, _ = strconv.ParseInt(r.URL.Query().Get("id"), 10, 64)
+	req.LastKey = r.URL.Query().Get("last_key")
+	req.Limit, _ = strconv.ParseInt(r.URL.Query().Get("limit"), 10, 64)
+
+	// Call the project service to get the project donations
+	donations, err := h.ProjectService.ListDonationByProjectId(r.Context(), req)
+	if err != nil {
+		fmt.Println("error getting project donations", err)
+		ResponseErrorBadRequest(w, err.Error())
+		return
+	}
+
+	ResponseSuccess(w, donations)
 }
