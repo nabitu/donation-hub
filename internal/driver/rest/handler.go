@@ -96,11 +96,48 @@ func (h *Handler) HandleUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) HandleRequestProjectUrl(w http.ResponseWriter, r *http.Request) {
-	// TODO: implement request project URL
+	req := model.RequestUploadUrlInput{
+		UserID:   1, // todo: get user id from context
+		MimeType: r.URL.Query().Get("mime_type"),
+	}
+
+	fileSizeStr := r.URL.Query().Get("file_size")
+	fileSize, err := strconv.ParseInt(fileSizeStr, 10, 64)
+	if err != nil {
+		fmt.Println("error parsing file size", err)
+		ResponseErrorBadRequest(w, "invalid file size")
+		return
+	}
+
+	req.FileSize = fileSize
+
+	response, err := h.ProjectService.RequestUploadUrl(r.Context(), req)
+	if err != nil {
+		return
+	}
+
+	ResponseSuccess(w, response)
 }
 
 func (h *Handler) HandleSubmitProject(w http.ResponseWriter, r *http.Request) {
-	// TODO: implement submit project
+	var req model.SubmitProjectInput
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		fmt.Println("error decoding request", err)
+		ResponseErrorBadRequest(w, "invalid request")
+		return
+	}
+
+	req.UserID = 4 // todo: get user id from context
+
+	response, err := h.ProjectService.SubmitProject(r.Context(), req)
+	if err != nil {
+		fmt.Println("error submit project", err)
+		ResponseErrorBadRequest(w, err.Error())
+		return
+	}
+
+	ResponseSuccess(w, response)
 }
 
 func (h *Handler) HandleProjectReview(w http.ResponseWriter, r *http.Request) {
