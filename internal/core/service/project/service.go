@@ -162,7 +162,7 @@ func (s *Storage) DonateToProject(ctx context.Context, input model.DonateToProje
 		return errors.New(fmt.Sprintf("failed to get project, err: %s", err.Error()))
 	}
 
-	if float64(input.Amount) > p.TargetAmount || float64(input.Amount) > p.CollectionAmount {
+	if float64(input.Amount) > p.TargetAmount {
 		return errors.New("ERR_TOO_MUCH_DONATION")
 	}
 
