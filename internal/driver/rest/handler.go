@@ -110,9 +110,12 @@ func (h *Handler) HandleRequestProjectUrl(w http.ResponseWriter, r *http.Request
 	}
 
 	req.FileSize = fileSize
+	req.UserID = 3
 
 	response, err := h.ProjectService.RequestUploadUrl(r.Context(), req)
 	if err != nil {
+		fmt.Println("error request upload url", err)
+		ResponseErrorBadRequest(w, err.Error())
 		return
 	}
 

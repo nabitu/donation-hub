@@ -52,7 +52,7 @@ func (s *Storage) RequestUploadUrl(ctx context.Context, input model.RequestUploa
 
 	// validate mimetype
 	if input.MimeType != "image/jpeg" && input.MimeType != "image/png" {
-		return nil, errors.New("mimetype must be image/jpg or image/png")
+		return nil, errors.New("mimetype must be image/jpeg or image/png")
 	}
 
 	r, err := s.fileStorage.RequestUploadUrl(input.MimeType, input.FileSize)
