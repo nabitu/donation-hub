@@ -2,8 +2,9 @@ package userstorage
 
 import (
 	"context"
-	"github.com/isdzulqor/donation-hub/internal/core/model"
 	"time"
+
+	"github.com/isdzulqor/donation-hub/internal/core/model"
 )
 
 type Storage struct {
@@ -121,7 +122,7 @@ func (s Storage) GetUser(ctx context.Context, input model.ListUserInput) (users 
 
 	if input.Role == "" {
 		query = `SELECT users.*, GROUP_CONCAT(user_roles.role) AS roles
-				FROM users 
+				FROM users
 				JOIN user_roles ON users.id = user_roles.user_id
 				WHERE user_roles.role IN ("donor", "requester")
 				GROUP BY users.id LIMIT ? OFFSET ? `
@@ -130,12 +131,12 @@ func (s Storage) GetUser(ctx context.Context, input model.ListUserInput) (users 
 		err = s.container.Connection.DB.Get(&count, "SELECT COUNT(*) as total FROM users u JOIN user_roles ur ON u.id = ur.user_id WHERE ur.role IN ('donor', 'requester')")
 	} else {
 		query = `SELECT users.*, GROUP_CONCAT(user_roles.role) AS roles
-				FROM users 
+				FROM users
 				JOIN user_roles ON users.id = user_roles.user_id
 				WHERE user_roles.role = ? GROUP BY users.id LIMIT ? OFFSET ? `
 
 		err = s.container.Connection.DB.Select(&users, query, input.Role, input.Limit, offset)
-		err = s.container.Connection.DB.Get(&count, "SELECT COUNT(*) as total FROM users u JOIN user_roles ur ON u.id = ur.user_id WHERE ur.role = ? GROUP BY u.id")
+		err = s.container.Connection.DB.Get(&count, "SELECT COUNT(*) as total FROM users u JOIN user_roles ur ON u.id = ur.user_id WHERE ur.role = ? GROUP BY u.id", input.Role)
 	}
 
 	total = count.Total

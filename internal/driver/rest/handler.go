@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/isdzulqor/donation-hub/internal/core/model"
 	"github.com/isdzulqor/donation-hub/internal/core/service/project"
@@ -66,7 +67,32 @@ func (h *Handler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) HandleUsers(w http.ResponseWriter, r *http.Request) {
-	// TODO: implement get users
+	var req model.ListUserInput
+	pageStr := r.URL.Query().Get("page")
+	page, err := strconv.ParseInt(pageStr, 10, 64)
+	if err != nil {
+		page = 1
+	}
+	req.Page = page
+
+	limitStr := r.URL.Query().Get("limit")
+	limit, err := strconv.ParseInt(limitStr, 10, 64)
+	if err != nil {
+		limit = 10
+	}
+	req.Limit = limit
+
+	req.Role = r.URL.Query().Get("role")
+	req.Role = "donor"
+
+	users, err := h.UserService.ListUser(r.Context(), req)
+	if err != nil {
+		fmt.Println("error get users", err)
+		ResponseErrorBadRequest(w, err.Error())
+		return
+	}
+
+	ResponseSuccess(w, users)
 }
 
 func (h *Handler) HandleRequestProjectUrl(w http.ResponseWriter, r *http.Request) {
