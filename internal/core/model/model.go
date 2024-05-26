@@ -1,5 +1,10 @@
 package model
 
+import (
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/jmoiron/sqlx"
+)
+
 type Config struct {
 	AppPort                 string
 	DBDriverName            string
@@ -9,8 +14,19 @@ type Config struct {
 	AwsSecretAccessKey      string
 	AwsEndpoint             string
 	AwsUsePathStyleEndpoint bool
+	AwsS3Bucket             string
 	TokenSecretKey          string
 	TokenIssuer             string
+}
+
+type Connection struct {
+	S3Client *s3.Client
+	DB       *sqlx.DB
+}
+
+type Container struct {
+	Connection *Connection
+	Config     *Config
 }
 
 type UserRegisterInput struct {

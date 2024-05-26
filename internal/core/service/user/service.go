@@ -31,7 +31,7 @@ func (s *Storage) Register(ctx context.Context, input model.UserRegisterInput) (
 	// todo: add validation for input here
 
 	hasEmail, err := s.storage.HasEmail(ctx, input.Email)
-	if (err != nil) || (hasEmail) {
+	if hasEmail {
 		return nil, errors.New("email already exists")
 	}
 
