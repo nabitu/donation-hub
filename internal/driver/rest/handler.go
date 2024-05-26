@@ -210,6 +210,7 @@ func (h *Handler) HandleDonateProject(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Call the project service to donate to the project
+	req.UserID = 2
 	err = h.ProjectService.DonateToProject(r.Context(), req)
 	if err != nil {
 		fmt.Println("error donating to project", err)

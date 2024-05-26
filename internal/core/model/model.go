@@ -1,6 +1,8 @@
 package model
 
 import (
+	"errors"
+
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/jmoiron/sqlx"
 )
@@ -192,6 +194,18 @@ type DonateToProjectInput struct {
 	Message   string `json:"message"`
 }
 
+func (d DonateToProjectInput) Validate() error {
+	if d.Amount <= 0 {
+		return errors.New("invalid amount")
+	}
+
+	if d.Currency == "" {
+		return errors.New("currency is required")
+	}
+
+	return nil
+}
+
 type ListProjectDonationInput struct {
 	ProjectId int64  `json:"project_id"`
 	Limit     int64  `json:"limit"`
@@ -204,12 +218,14 @@ type Donor struct {
 }
 
 type Donation struct {
-	ID        int64  `json:"id"`
-	Amount    int64  `json:"amount"`
-	Currency  string `json:"currency"`
-	Message   string `json:"message"`
-	Donor     Donor  `json:"donor"`
-	CreatedAt int64  `json:"created_at"`
+	ID            int64  `json:"id"`
+	Amount        int64  `json:"amount"`
+	Currency      string `json:"currency"`
+	Message       string `json:"message"`
+	Donor         Donor  `json:"donor"`
+	CreatedAt     int64  `json:"created_at" db:"created_at"`
+	DonorId       int64  `json:"donor_id" db:"donor_id"`
+	DonorUsername string `json:"donor_username" db:"donor_username"`
 }
 
 type ListProjectDonationOutput struct {

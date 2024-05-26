@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/isdzulqor/donation-hub/internal/core/model"
 	"github.com/isdzulqor/donation-hub/internal/core/service/user"
 	_type "github.com/isdzulqor/donation-hub/internal/core/type"
@@ -144,6 +145,11 @@ func (s *Storage) GetProjectById(ctx context.Context, input model.GetProjectById
 }
 
 func (s *Storage) DonateToProject(ctx context.Context, input model.DonateToProjectInput) error {
+	// validate donations
+	if err := input.Validate(); err != nil {
+		return errors.New(fmt.Sprintf("failed to validate donation, err: %s", err.Error()))
+	}
+
 	// make sure user has role donor
 	ok, err := s.userDataStorage.UserHasRole(ctx, input.UserID, _type.ROLE_DONOR)
 	if !ok || err != nil {
