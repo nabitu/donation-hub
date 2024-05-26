@@ -25,7 +25,7 @@ func main() {
 	err := rest.StartApp(rest.Config{
 		Port:           c.Config.AppPort,
 		ProjectService: projectService,
-		UserServicce:   userService,
+		UserService:    userService,
 	})
 	if err != nil {
 		fmt.Errorf("failed to start app, err: %s", err.Error())

@@ -11,7 +11,7 @@ import (
 type Config struct {
 	Port           string
 	ProjectService project.Service
-	UserServicce   user.Service
+	UserService    user.Service
 }
 
 func (c Config) Validate() error {
@@ -23,7 +23,7 @@ func (c Config) Validate() error {
 		return fmt.Errorf("project service is required")
 	}
 
-	if c.UserServicce == nil {
+	if c.UserService == nil {
 		return fmt.Errorf("user service is required")
 	}
 
@@ -37,13 +37,19 @@ func StartApp(c Config) error {
 
 	app := http.NewServeMux()
 
-	app.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(" (╯°□°）╯︵ ┻━┻ "))
-	})
+	handler := NewHandler(c.ProjectService, c.UserService)
 
-	app.HandleFunc("POST /users/login", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Login"))
-	})
+	app.HandleFunc("GET /", handler.DefaultHandler)
+	app.HandleFunc("POST /users/register", handler.HandleRegister)
+	app.HandleFunc("POST /users/login", handler.HandleLogin)
+	app.HandleFunc("GET /users", handler.HandleUsers)
+	app.HandleFunc("GET /projects/upload", handler.HandleRequestProjectUrl)
+	app.HandleFunc("POST /projects", handler.HandleSubmitProject)
+	app.HandleFunc("PUT /projects/{id}/review", handler.HandleProjectReview)
+	app.HandleFunc("GET /projects", handler.HandleProjects)
+	app.HandleFunc("GET /projects/{id}", handler.HandleProjectDetail)
+	app.HandleFunc("POST /projects/{id}/donations", handler.HandleDonateProject)
+	app.HandleFunc("GET /projects/{id}/donations", handler.HandleProjectDonations)
 
 	fmt.Println("Starting app on port", c.Port)
 	http.ListenAndServe(":"+c.Port, app)
