@@ -3,10 +3,11 @@ package user
 import (
 	"context"
 	"errors"
-	"github.com/isdzulqor/donation-hub/internal/core/model"
-	"github.com/isdzulqor/donation-hub/internal/core/service/auth"
 	"math"
 	"strings"
+
+	"github.com/isdzulqor/donation-hub/internal/core/model"
+	"github.com/isdzulqor/donation-hub/internal/core/service/auth"
 )
 
 type Storage struct {
