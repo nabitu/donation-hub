@@ -141,11 +141,40 @@ func (h *Handler) HandleSubmitProject(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) HandleProjectReview(w http.ResponseWriter, r *http.Request) {
-	// TODO: implement project review
+	var req model.ReviewProjectByAdminInput
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		fmt.Println("error decoding request", err)
+		ResponseErrorBadRequest(w, "invalid request")
+		return
+	}
+
+	req.UserID = 4 // todo: get user id from context
+	err = h.ProjectService.ReviewProjectByAdmin(r.Context(), req)
+	if err != nil {
+		return
+	}
+
+	ResponseSuccess(w, "")
 }
 
 func (h *Handler) HandleProjects(w http.ResponseWriter, r *http.Request) {
-	// TODO: implement get projects
+	var req model.ListProjectInput
+	limitStr := r.URL.Query().Get("limit")
+	limit, err := strconv.ParseInt(limitStr, 10, 64)
+	if err != nil {
+		limit = 10
+	}
+	req.Limit = limit
+
+	projects, err := h.ProjectService.ListProject(r.Context(), req)
+	if err != nil {
+		fmt.Println("error get projects", err)
+		ResponseErrorBadRequest(w, err.Error())
+		return
+	}
+
+	ResponseSuccess(w, projects)
 }
 
 func (h *Handler) HandleProjectDetail(w http.ResponseWriter, r *http.Request) {

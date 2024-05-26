@@ -16,12 +16,14 @@ type httpError struct {
 type httpSuccess struct {
 	Ok   bool        `json:"ok"`
 	Data interface{} `json:"data"`
+	Ts   int64       `json:"ts"`
 }
 
 func ResponseSuccess(w http.ResponseWriter, data interface{}) {
 	res := &httpSuccess{
 		Ok:   true,
 		Data: data,
+		Ts:   time.Now().Unix(),
 	}
 
 	w.Header().Set("Content-Type", "application/json")
