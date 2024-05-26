@@ -47,7 +47,22 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) HandleRegister(w http.ResponseWriter, r *http.Request) {
-	// TODO: implement register
+	var req model.UserRegisterInput
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		fmt.Println("error decoding request", err)
+		ResponseErrorBadRequest(w, "invalid request")
+		return
+	}
+
+	response, err := h.UserService.Register(r.Context(), req)
+	if err != nil {
+		fmt.Println("error register", err)
+		ResponseErrorBadRequest(w, err.Error())
+		return
+	}
+
+	ResponseSuccess(w, response)
 }
 
 func (h *Handler) HandleUsers(w http.ResponseWriter, r *http.Request) {
