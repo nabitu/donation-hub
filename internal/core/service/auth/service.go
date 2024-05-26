@@ -6,7 +6,3 @@ type Service interface {
 	GenerateToken(i model.AuthPayload) (token string, err error)
 	ValidateToken(token string) (*model.AuthPayload, error)
 }
-
-type service struct {
-	cfg model.Config
-}
