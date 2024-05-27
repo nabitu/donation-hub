@@ -17,15 +17,15 @@ func main() {
 	userStorage := userstorage.New(c)
 	projectStorage := projectstorage.New(c)
 	projectFileStorage := projectfilestorage.New(c)
-	jwt := jwt.New(c)
-
-	userService := user.New(userStorage, jwt)
+	authToken := jwt.New(c)
+	userService := user.New(userStorage, authToken)
 	projectService := project.New(projectStorage, projectFileStorage, userStorage)
 
 	err := rest.StartApp(rest.Config{
-		Port:           c.Config.AppPort,
-		ProjectService: projectService,
-		UserService:    userService,
+		Port:             c.Config.AppPort,
+		ProjectService:   projectService,
+		UserService:      userService,
+		AuthTokenService: authToken,
 	})
 	if err != nil {
 		fmt.Errorf("failed to start app, err: %s", err.Error())

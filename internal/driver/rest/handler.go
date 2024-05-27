@@ -97,10 +97,9 @@ func (h *Handler) HandleUsers(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) HandleRequestProjectUrl(w http.ResponseWriter, r *http.Request) {
 	req := model.RequestUploadUrlInput{
-		UserID:   1, // todo: get user id from context
+		UserID:   r.Context().Value("auth_id").(int64),
 		MimeType: r.URL.Query().Get("mime_type"),
 	}
-
 	fileSizeStr := r.URL.Query().Get("file_size")
 	fileSize, err := strconv.ParseInt(fileSizeStr, 10, 64)
 	if err != nil {
@@ -131,8 +130,7 @@ func (h *Handler) HandleSubmitProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req.UserID = 4 // todo: get user id from context
-
+	req.UserID = r.Context().Value("auth_id").(int64)
 	response, err := h.ProjectService.SubmitProject(r.Context(), req)
 	if err != nil {
 		fmt.Println("error submit project", err)
@@ -152,7 +150,7 @@ func (h *Handler) HandleProjectReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req.UserID = 4 // todo: get user id from context
+	req.UserID = r.Context().Value("auth_id").(int64)
 	err = h.ProjectService.ReviewProjectByAdmin(r.Context(), req)
 	if err != nil {
 		return
@@ -169,6 +167,10 @@ func (h *Handler) HandleProjects(w http.ResponseWriter, r *http.Request) {
 		limit = 10
 	}
 	req.Limit = limit
+
+	if r.Context().Value("auth_id") != "" {
+		req.UserID = r.Context().Value("auth_id").(int64)
+	}
 
 	projects, err := h.ProjectService.ListProject(r.Context(), req)
 	if err != nil {
@@ -213,7 +215,7 @@ func (h *Handler) HandleDonateProject(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Call the project service to donate to the project
-	req.UserID = 2
+	req.UserID = r.Context().Value("auth_id").(int64)
 	err = h.ProjectService.DonateToProject(r.Context(), req)
 	if err != nil {
 		fmt.Println("error donating to project", err)
