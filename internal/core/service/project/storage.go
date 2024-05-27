@@ -16,4 +16,5 @@ type DataStorage interface {
 	GetProjectById(ctx context.Context, input model.GetProjectByIdInput) (o model.GetProjectByIdOutput, err error)
 	DonateToProject(ctx context.Context, input model.DonateToProjectInput) (err error)
 	ListDonationByProjectId(ctx context.Context, input model.ListProjectDonationInput) (o model.ListProjectDonationOutput, err error)
+	HasName(ctx context.Context, name string) (bool, error)
 }

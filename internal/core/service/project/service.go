@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/isdzulqor/donation-hub/internal/core/model"
 	"github.com/isdzulqor/donation-hub/internal/core/service/user"
@@ -74,6 +75,12 @@ func (s *Storage) SubmitProject(ctx context.Context, input model.SubmitProjectIn
 	ok, err := s.userDataStorage.UserHasRole(ctx, input.UserID, _type.ROLE_REQUESTER)
 	if !ok || err != nil {
 		return nil, errors.New("ERR_FORBIDDEN_ACCESS")
+	}
+
+	ok, err = s.storage.HasName(ctx, input.Title)
+	if ok || err != nil {
+		log.Println(err)
+		return nil, errors.New("project name already exist")
 	}
 
 	// save to database

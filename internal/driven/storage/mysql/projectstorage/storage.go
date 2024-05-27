@@ -220,6 +220,14 @@ func (s *Storage) ListDonationByProjectId(ctx context.Context, input model.ListP
 	return
 }
 
+func (s *Storage) HasName(ctx context.Context, name string) (bool, error) {
+	query := "select count(*) from projects where name = ?"
+	var exists = false
+	err := s.container.Connection.DB.Get(&exists, query, name)
+
+	return exists, err
+}
+
 func parseImageUrl(urls string) []string {
 	imageUrls := strings.Split(urls, ",")
 
