@@ -83,7 +83,6 @@ func (h *Handler) HandleUsers(w http.ResponseWriter, r *http.Request) {
 	req.Limit = limit
 
 	req.Role = r.URL.Query().Get("role")
-	req.Role = "donor"
 
 	users, err := h.UserService.ListUser(r.Context(), req)
 	if err != nil {
@@ -92,7 +91,7 @@ func (h *Handler) HandleUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ResponseSuccess(w, users)
+	ResponseSuccess(w, *users)
 }
 
 func (h *Handler) HandleRequestProjectUrl(w http.ResponseWriter, r *http.Request) {

@@ -2,6 +2,8 @@ package userstorage
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"time"
 
 	"github.com/isdzulqor/donation-hub/internal/core/model"
@@ -115,10 +117,12 @@ func (s Storage) GetUserById(ctx context.Context, id int64) (*model.User, error)
 }
 
 // GetUser total is a total data, not pagination
-func (s Storage) GetUser(ctx context.Context, input model.ListUserInput) (users []model.UserStorage, total int64, err error) {
+func (s Storage) GetUser(ctx context.Context, input model.ListUserInput) (*[]model.UserStorage, *int64, error) {
 	offset := (input.Page - 1) * input.Limit
 	var query string
 	var count UsersCount
+	var users []DatabaseUser
+	var err error
 
 	if input.Role == "" {
 		query = `SELECT users.*, GROUP_CONCAT(user_roles.role) AS roles
@@ -128,7 +132,14 @@ func (s Storage) GetUser(ctx context.Context, input model.ListUserInput) (users 
 				GROUP BY users.id LIMIT ? OFFSET ? `
 
 		err = s.container.Connection.DB.Select(&users, query, input.Limit, offset)
+		if err != nil {
+			return nil, nil, errors.New(fmt.Sprintf("error when get user: %v", err))
+		}
+
 		err = s.container.Connection.DB.Get(&count, "SELECT COUNT(*) as total FROM users u JOIN user_roles ur ON u.id = ur.user_id WHERE ur.role IN ('donor', 'requester')")
+		if err != nil {
+			return nil, nil, errors.New(fmt.Sprintf("error when count user: %v", err))
+		}
 	} else {
 		query = `SELECT users.*, GROUP_CONCAT(user_roles.role) AS roles
 				FROM users
@@ -136,11 +147,26 @@ func (s Storage) GetUser(ctx context.Context, input model.ListUserInput) (users 
 				WHERE user_roles.role = ? GROUP BY users.id LIMIT ? OFFSET ? `
 
 		err = s.container.Connection.DB.Select(&users, query, input.Role, input.Limit, offset)
+		if err != nil {
+			return nil, nil, errors.New(fmt.Sprintf("error when get user: %v", err))
+		}
 		err = s.container.Connection.DB.Get(&count, "SELECT COUNT(*) as total FROM users u JOIN user_roles ur ON u.id = ur.user_id WHERE ur.role = ? GROUP BY u.id", input.Role)
+		if err != nil {
+			return nil, nil, errors.New(fmt.Sprintf("error when count user: %v", err))
+		}
 	}
 
-	total = count.Total
-	return
+	var userStorages []model.UserStorage
+	for _, user := range users {
+		userStorages = append(userStorages, model.UserStorage{
+			ID:       user.ID,
+			Username: user.Username,
+			Email:    user.Email,
+			Roles:    user.Roles,
+		})
+	}
+
+	return &userStorages, &count.Total, nil
 }
 
 func (s Storage) UserHasRole(ctx context.Context, userId int64, role string) (bool, error) {

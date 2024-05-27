@@ -87,21 +87,21 @@ func (s *Storage) ListUser(ctx context.Context, input model.ListUserInput) (outp
 		return nil, err
 	}
 
-	listUsers := make([]model.User, len(userStorages))
-	for i, us := range userStorages {
+	var listUsers []model.User
+	for _, us := range *userStorages {
 		roles := strings.Split(us.Roles, ",")
-		listUser := model.User{
+
+		listUsers = append(listUsers, model.User{
 			ID:       us.ID,
 			Username: us.Username,
 			Email:    us.Email,
 			Roles:    roles,
-		}
-		listUsers[i] = listUser
+		})
 	}
 
 	// pagination
-	totalPage := int64(math.Ceil(float64(total / input.Limit)))
-	if total%input.Limit != 0 {
+	totalPage := int64(math.Ceil(float64(*total / input.Limit)))
+	if *total%input.Limit != 0 {
 		totalPage++
 	}
 

@@ -13,6 +13,6 @@ type DataStorage interface {
 	HasUsername(ctx context.Context, username string) (bool, error)
 	GetUserByUsername(ctx context.Context, username string) (*model.User, error)
 	GetUserById(ctx context.Context, id int64) (*model.User, error)
-	GetUser(ctx context.Context, input model.ListUserInput) (users []model.UserStorage, total int64, err error)
+	GetUser(ctx context.Context, input model.ListUserInput) (*[]model.UserStorage, *int64, error)
 	UserHasRole(ctx context.Context, userId int64, role string) (bool, error)
 }
