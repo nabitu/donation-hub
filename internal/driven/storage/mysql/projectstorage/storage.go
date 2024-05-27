@@ -87,18 +87,36 @@ func (s *Storage) ReviewByAdmin(ctx context.Context, input model.ReviewProjectBy
 
 func (s *Storage) ListProject(ctx context.Context, input model.ListProjectInput) (o model.ListProjectOutput, err error) {
 	var projects []DatabaseProject
+	var args []interface{}
+
 	query := `SELECT p.*, IFNULL(GROUP_CONCAT(pi.url), '') AS image_urls, u.id as requester_id, u.username as requester_username, u.email as requester_email
 		FROM projects p
 		LEFT JOIN project_images pi ON p.id = pi.project_id
 		JOIN users u ON u.id = p.requester_id
-# 		WHERE p.status = ? AND p.created_at BETWEEN ? AND ?
-		GROUP BY p.id
-# 		ORDER BY p.created_at DESC
-# 		LIMIT ?
+ 		WHERE 1=1
+-- 		GROUP BY p.id
 		`
 
-	fmt.Println(query)
-	fmt.Println(input)
+	if input.StartTs != 0 {
+		query += " AND p.due_at >= ?"
+		args = append(args, input.StartTs)
+	}
+
+	if input.EndTs != 0 {
+		query += " AND p.due_at <= ?"
+		args = append(args, input.EndTs)
+	}
+
+	if input.LastKey != "" {
+		query += " AND p.id > ?"
+		args = append(args, input.LastKey)
+	}
+
+	query += " GROUP BY p.id"
+	if input.Limit != 0 || input.Limit > 0 {
+		query += " LIMIT ?"
+		args = append(args, input.Limit)
+	}
 
 	if err = s.container.Connection.DB.Select(&projects, query); err != nil {
 		fmt.Println(err)
@@ -124,8 +142,13 @@ func (s *Storage) ListProject(ctx context.Context, input model.ListProjectInput)
 			},
 		}
 	}
+
+	lastProjectID := ""
+	if len(projects) > 0 {
+		lastProjectID = fmt.Sprintf("%d", projects[len(projects)-1].ID)
+	}
 	o.Projects = pLists
-	o.LastKey = input.LastKey
+	o.LastKey = lastProjectID
 
 	return
 }
