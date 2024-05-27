@@ -2,6 +2,7 @@ package rest
 
 import (
 	"fmt"
+	"github.com/isdzulqor/donation-hub/internal/core/service/auth"
 	"net/http"
 
 	"github.com/isdzulqor/donation-hub/internal/core/service/project"
@@ -9,9 +10,10 @@ import (
 )
 
 type Config struct {
-	Port           string
-	ProjectService project.Service
-	UserService    user.Service
+	Port             string
+	ProjectService   project.Service
+	UserService      user.Service
+	AuthTokenService auth.Service
 }
 
 func (c Config) Validate() error {
@@ -25,6 +27,10 @@ func (c Config) Validate() error {
 
 	if c.UserService == nil {
 		return fmt.Errorf("user service is required")
+	}
+
+	if c.AuthTokenService == nil {
+		return fmt.Errorf("auth token service is required")
 	}
 
 	return nil
@@ -43,12 +49,12 @@ func StartApp(c Config) error {
 	app.HandleFunc("POST /users/register", handler.HandleRegister)
 	app.HandleFunc("POST /users/login", handler.HandleLogin)
 	app.HandleFunc("GET /users", handler.HandleUsers)
-	app.HandleFunc("GET /projects/upload", handler.HandleRequestProjectUrl)
-	app.HandleFunc("POST /projects", handler.HandleSubmitProject)
-	app.HandleFunc("PUT /projects/{id}/review", handler.HandleProjectReview)
-	app.HandleFunc("GET /projects", handler.HandleProjects)
+	app.HandleFunc("GET /projects/upload", authTokenMiddleware(handler.HandleRequestProjectUrl, &c, false))
+	app.HandleFunc("POST /projects", authTokenMiddleware(handler.HandleSubmitProject, &c, false))
+	app.HandleFunc("PUT /projects/{id}/review", authTokenMiddleware(handler.HandleProjectReview, &c, false))
+	app.HandleFunc("GET /projects", authTokenMiddleware(handler.HandleProjects, &c, true))
 	app.HandleFunc("GET /projects/{id}", handler.HandleProjectDetail)
-	app.HandleFunc("POST /projects/{id}/donations", handler.HandleDonateProject)
+	app.HandleFunc("POST /projects/{id}/donations", authTokenMiddleware(handler.HandleDonateProject, &c, false))
 	app.HandleFunc("GET /projects/{id}/donations", handler.HandleProjectDonations)
 
 	fmt.Println("Starting app on port", c.Port)
