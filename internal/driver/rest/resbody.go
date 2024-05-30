@@ -6,7 +6,15 @@ import (
 	"time"
 )
 
+type internalServerError struct {
+	Status     int64  `json:"status"`
+	StatusCode int    `json:"-"`
+	Message    string `json:"msg"`
+	Err        string `json:"err"`
+	Ts         int64  `json:"ts"`
+}
 type httpError struct {
+	Ok         bool   `json:"ok"`
 	StatusCode int    `json:"-"`
 	Message    string `json:"msg"`
 	Err        string `json:"err"`
@@ -33,6 +41,7 @@ func ResponseSuccess(w http.ResponseWriter, data interface{}) {
 
 func ResponseErrorUnauthorized(w http.ResponseWriter, msg string) {
 	res := &httpError{
+		Ok:         false,
 		StatusCode: http.StatusUnauthorized,
 		Message:    msg,
 		Ts:         time.Now().Unix(),
@@ -46,6 +55,7 @@ func ResponseErrorUnauthorized(w http.ResponseWriter, msg string) {
 
 func ResponseErrorBadRequest(w http.ResponseWriter, msg string) {
 	res := &httpError{
+		Ok:         false,
 		StatusCode: http.StatusBadRequest,
 		Message:    msg,
 		Ts:         time.Now().Unix(),
@@ -59,6 +69,7 @@ func ResponseErrorBadRequest(w http.ResponseWriter, msg string) {
 
 func ResponseErrorReadTimeout(w http.ResponseWriter, msg string) {
 	res := &httpError{
+		Ok:         false,
 		StatusCode: http.StatusRequestTimeout,
 		Message:    msg,
 		Ts:         time.Now().Unix(),
@@ -72,6 +83,7 @@ func ResponseErrorReadTimeout(w http.ResponseWriter, msg string) {
 
 func ResponseErrorInvalidAccessToken(w http.ResponseWriter, msg string) {
 	res := &httpError{
+		Ok:         false,
 		StatusCode: http.StatusUnauthorized,
 		Message:    msg,
 		Ts:         time.Now().Unix(),
@@ -85,6 +97,7 @@ func ResponseErrorInvalidAccessToken(w http.ResponseWriter, msg string) {
 
 func ResponseErrorForbiddenAccess(w http.ResponseWriter, msg string) {
 	res := &httpError{
+		Ok:         false,
 		StatusCode: http.StatusForbidden,
 		Message:    msg,
 		Ts:         time.Now().Unix(),
@@ -98,6 +111,7 @@ func ResponseErrorForbiddenAccess(w http.ResponseWriter, msg string) {
 
 func ResponseErrorNotFound(w http.ResponseWriter, msg string) {
 	res := &httpError{
+		Ok:         false,
 		StatusCode: http.StatusNotFound,
 		Message:    msg,
 		Ts:         time.Now().Unix(),
@@ -110,7 +124,8 @@ func ResponseErrorNotFound(w http.ResponseWriter, msg string) {
 }
 
 func ResponseErrorInternalServerError(w http.ResponseWriter, msg string) {
-	res := &httpError{
+	res := &internalServerError{
+		Status:     http.StatusInternalServerError,
 		StatusCode: http.StatusInternalServerError,
 		Message:    msg,
 		Ts:         time.Now().Unix(),
@@ -124,6 +139,7 @@ func ResponseErrorInternalServerError(w http.ResponseWriter, msg string) {
 
 func ResponseErrorInvalidCredentials(w http.ResponseWriter, msg string) {
 	res := &httpError{
+		Ok:         false,
 		StatusCode: http.StatusUnauthorized,
 		Message:    msg,
 		Ts:         time.Now().Unix(),
