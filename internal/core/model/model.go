@@ -231,14 +231,12 @@ type Donor struct {
 }
 
 type Donation struct {
-	ID            int64  `json:"id"`
-	Amount        int64  `json:"amount"`
-	Currency      string `json:"currency"`
-	Message       string `json:"message"`
-	Donor         Donor  `json:"donor"`
-	CreatedAt     int64  `json:"created_at" db:"created_at"`
-	DonorId       int64  `json:"donor_id" db:"donor_id"`
-	DonorUsername string `json:"donor_username" db:"donor_username"`
+	ID        int64  `json:"id"`
+	Amount    int64  `json:"amount"`
+	Currency  string `json:"currency"`
+	Message   string `json:"message"`
+	Donor     Donor  `json:"donor"`
+	CreatedAt int64  `json:"created_at"`
 }
 
 type ListProjectDonationOutput struct {

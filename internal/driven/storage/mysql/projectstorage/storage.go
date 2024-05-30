@@ -6,6 +6,7 @@ import (
 	"github.com/isdzulqor/donation-hub/internal/core/model"
 	_type "github.com/isdzulqor/donation-hub/internal/core/type"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -31,6 +32,16 @@ type DatabaseProject struct {
 	DueAt             int64   `db:"due_at"`
 	CreatedAt         int64   `db:"created_at"`
 	UpdatedAt         int64   `db:"updated_at"`
+}
+
+type DatabaseDonation struct {
+	ID            int64  `db:"id"`
+	Amount        int64  `db:"amount"`
+	Currency      string `db:"currency"`
+	Message       string `db:"message"`
+	DonorID       int64  `db:"donor_id"`
+	DonorUsername string `db:"donor_username"`
+	CreatedAt     int64  `db:"created_at"`
 }
 
 func New(container *model.Container) *Storage {
@@ -179,8 +190,10 @@ func (s *Storage) GetProjectById(ctx context.Context, input model.GetProjectById
 			users u ON u.id = p.requester_id
 		LEFT JOIN
 			donations d ON d.project_id = p.id AND p.id = ?
+		WHERE
+		    p.id = ?
 	`
-	err = s.container.Connection.DB.GetContext(ctx, &p, query, input.ProjectId)
+	err = s.container.Connection.DB.GetContext(ctx, &p, query, input.ProjectId, input.ProjectId)
 
 	o.ID = p.ID
 	o.Title = p.Name
@@ -217,6 +230,9 @@ func (s *Storage) DonateToProject(ctx context.Context, input model.DonateToProje
 }
 
 func (s *Storage) ListDonationByProjectId(ctx context.Context, input model.ListProjectDonationInput) (output model.ListProjectDonationOutput, err error) {
+	var params []interface{}
+	var donations []DatabaseDonation
+
 	// write query get data from table donation
 	query := `
 	SELECT
@@ -232,16 +248,45 @@ func (s *Storage) ListDonationByProjectId(ctx context.Context, input model.ListP
 	JOIN
 		users u ON u.id = d.donor_id
 	WHERE
-		d.project_id = ?
+	    d.project_id = ?
 	`
-	var donations []model.Donation
-	err = s.container.Connection.DB.SelectContext(ctx, &donations, query, input.ProjectId)
 
-	fmt.Println(donations)
-	fmt.Println(err)
+	params = append(params, input.ProjectId)
+	// Add last_key condition if provided
+	if input.LastKey != "" {
+		query += " AND d.id > ?"
+		params = append(params, input.LastKey)
+	}
+
+	if input.Limit > 0 {
+		// Add limit for pagination
+		query += " ORDER BY d.id ASC LIMIT ?"
+		params = append(params, input.Limit)
+	}
+	err = s.container.Connection.DB.SelectContext(ctx, &donations, query, params...)
+
+	for _, d := range donations {
+		output.Donations = append(output.Donations, model.Donation{
+			ID:       d.ID,
+			Amount:   d.Amount,
+			Currency: d.Currency,
+			Message:  d.Message,
+			Donor: model.Donor{
+				ID:       d.DonorID,
+				Username: d.DonorUsername,
+			},
+			CreatedAt: d.CreatedAt,
+		})
+	}
+
+	if len(donations) > 0 {
+		output.LastKey = strconv.FormatInt(donations[len(donations)-1].ID, 10)
+	}
+
 	if err != nil {
 		return
 	}
+
 	return
 }
 
