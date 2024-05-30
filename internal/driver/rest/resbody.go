@@ -23,7 +23,7 @@ type httpError struct {
 
 type httpSuccess struct {
 	Ok   bool        `json:"ok"`
-	Data interface{} `json:"data"`
+	Data interface{} `json:"data,omitempty"`
 	Ts   int64       `json:"ts"`
 }
 

@@ -104,7 +104,7 @@ func (s *Storage) SubmitProject(ctx context.Context, input model.SubmitProjectIn
 
 func (s *Storage) ReviewProjectByAdmin(ctx context.Context, input model.ReviewProjectByAdminInput) error {
 	// validate user, make sure role is valid
-	ok, err := s.userDataStorage.UserHasRole(ctx, input.UserID, _type.ROLE_REQUESTER)
+	ok, err := s.userDataStorage.UserHasRole(ctx, input.UserID, _type.ROLE_ADMIN)
 	if !ok || err != nil {
 		return errors.New("ERR_FORBIDDEN_ACCESS")
 	}
