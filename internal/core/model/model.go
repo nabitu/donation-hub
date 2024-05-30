@@ -121,13 +121,17 @@ type RequestUploadUrlOutput struct {
 }
 
 type SubmitProjectInput struct {
-	UserID       int64    `json:"user_id"` // user auth id from jwt or other
-	Title        string   `json:"title"`
-	Description  string   `json:"description"`
-	ImageURLs    []string `json:"image_urls"`
-	DueAt        int64    `json:"due_at"`
-	TargetAmount int64    `json:"target_amount"`
-	Currency     string   `json:"currency"`
+	UserID       int64    `json:"user_id"`
+	Title        string   `json:"title" validate:"required,min=3,max=100"`
+	Description  string   `json:"description" validate:"required,min=3,max=1000"`
+	ImageURLs    []string `json:"image_urls" validate:"required,min=1,max=5"`
+	DueAt        int64    `json:"due_at" validate:"required"`
+	TargetAmount int64    `json:"target_amount" validate:"required,min=1"`
+	Currency     string   `json:"currency" validate:"required"`
+}
+
+func (i SubmitProjectInput) Validate() error {
+	return validator.Validate().Struct(i)
 }
 
 type SubmitProjectOutput struct {
