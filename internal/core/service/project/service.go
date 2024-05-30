@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/isdzulqor/donation-hub/internal/utill/role"
 	"log"
 
 	"github.com/isdzulqor/donation-hub/internal/core/model"
@@ -131,10 +132,10 @@ func (s *Storage) ReviewProjectByAdmin(ctx context.Context, input model.ReviewPr
 }
 
 func (s *Storage) ListProject(ctx context.Context, input model.ListProjectInput) (*model.ListProjectOutput, error) {
+	input.IsAdmin = role.HasRoleFromContext(ctx, _type.ROLE_ADMIN)
 	// make sure user has role admin if status need_review
 	if input.Status == _type.PROJECT_NEED_REVIEW {
-		ok, err := s.userDataStorage.UserHasRole(ctx, input.UserID, _type.ROLE_ADMIN)
-		if !ok || err != nil {
+		if !input.IsAdmin {
 			return nil, errors.New("ERR_FORBIDDEN_ACCESS")
 		}
 	}

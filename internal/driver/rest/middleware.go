@@ -27,6 +27,7 @@ func authTokenMiddleware(next http.HandlerFunc, c *Config, isOptional bool, role
 				ctx = context.WithValue(ctx, "auth_id", payload.UserID)
 				ctx = context.WithValue(ctx, "auth_username", payload.Username)
 				ctx = context.WithValue(ctx, "auth_email", payload.Email)
+				ctx = context.WithValue(ctx, "auth_roles", payload.Role)
 			}
 		} else {
 			// isOptionalnya = false, then the token must be correct
