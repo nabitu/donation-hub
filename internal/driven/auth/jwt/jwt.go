@@ -72,6 +72,7 @@ func (s service) ValidateToken(tokenString string) (*model.AuthPayload, error) {
 			UserID:   int64(id),
 			Username: claims.Username,
 			Email:    claims.Email,
+			Role:     claims.Role,
 		}, nil
 	}
 
