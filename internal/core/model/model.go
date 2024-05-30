@@ -161,6 +161,7 @@ type ListProjectInput struct {
 	StartTs int64  `json:"start_ts"` // jangan lupa, ini nanti Unix timestamp
 	EndTs   int64  `json:"end_ts"`   // jangan lupa, ini nanti Unix timestamp
 	LastKey string `json:"last_key"`
+	IsAdmin bool   `json:"is_admin"`
 }
 
 type Requester struct {

@@ -123,6 +123,11 @@ func (s *Storage) ListProject(ctx context.Context, input model.ListProjectInput)
 		args = append(args, input.LastKey)
 	}
 
+	if !input.IsAdmin {
+		query += " AND NOT p.status = ?"
+		args = append(args, _type.PROJECT_NEED_REVIEW)
+	}
+
 	query += " GROUP BY p.id"
 	if input.Limit != 0 || input.Limit > 0 {
 		query += " LIMIT ?"
