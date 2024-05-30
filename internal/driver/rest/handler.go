@@ -109,7 +109,6 @@ func (h *Handler) HandleRequestProjectUrl(w http.ResponseWriter, r *http.Request
 	}
 
 	req.FileSize = fileSize
-	req.UserID = 3
 
 	response, err := h.ProjectService.RequestUploadUrl(r.Context(), req)
 	if err != nil {
@@ -130,7 +129,9 @@ func (h *Handler) HandleSubmitProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req.UserID = r.Context().Value("auth_id").(int64)
+	if r.Context().Value("auth_id") != "" {
+		req.UserID = r.Context().Value("auth_id").(int64)
+	}
 	response, err := h.ProjectService.SubmitProject(r.Context(), req)
 	if err != nil {
 		fmt.Println("error submit project", err)
@@ -150,7 +151,9 @@ func (h *Handler) HandleProjectReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req.UserID = r.Context().Value("auth_id").(int64)
+	if r.Context().Value("auth_id") != "" {
+		req.UserID = r.Context().Value("auth_id").(int64)
+	}
 	err = h.ProjectService.ReviewProjectByAdmin(r.Context(), req)
 	if err != nil {
 		return
@@ -220,7 +223,9 @@ func (h *Handler) HandleDonateProject(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Call the project service to donate to the project
-	req.UserID = r.Context().Value("auth_id").(int64)
+	if r.Context().Value("auth_id") != "" {
+		req.UserID = r.Context().Value("auth_id").(int64)
+	}
 	err = h.ProjectService.DonateToProject(r.Context(), req)
 	if err != nil {
 		fmt.Println("error donating to project", err)
