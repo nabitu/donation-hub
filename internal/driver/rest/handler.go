@@ -261,7 +261,13 @@ func (h *Handler) HandleDonateProject(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) HandleProjectDonations(w http.ResponseWriter, r *http.Request) {
 	var req model.ListProjectDonationInput
 	req.LastKey = r.URL.Query().Get("last_key")
-	req.Limit, _ = strconv.ParseInt(r.URL.Query().Get("limit"), 10, 64)
+	limit, err := strconv.ParseInt(r.URL.Query().Get("limit"), 10, 64)
+	if err != nil {
+		fmt.Println("error parsing limit", err)
+		ResponseErrorBadRequest(w, "invalid limit")
+		return
+	}
+	req.Limit = limit
 
 	// get project id
 	projectIDStr := r.PathValue("id")
