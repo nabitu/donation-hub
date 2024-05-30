@@ -57,7 +57,11 @@ func (s *Storage) Register(ctx context.Context, input model.UserRegisterInput) (
 }
 
 func (s *Storage) Login(ctx context.Context, input model.UserLoginInput) (*model.UserLoginOutput, error) {
-	// todo: add validation for input here
+	// validation for input here
+	err := input.Validate()
+	if err != nil {
+		return nil, err
+	}
 
 	user, err := s.storage.GetUserByUsername(ctx, input.Username)
 	if err != nil || user.Password != input.Password {

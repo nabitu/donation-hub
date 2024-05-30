@@ -50,8 +50,12 @@ type UserRegisterOutput struct {
 }
 
 type UserLoginInput struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Username string `json:"username" validate:"required"`
+	Password string `json:"password" validate:"required,min=3,max=20"`
+}
+
+func (i UserLoginInput) Validate() error {
+	return validator.Validate().Struct(i)
 }
 
 type UserLoginOutput struct {
