@@ -65,6 +65,7 @@ func (s *Storage) Login(ctx context.Context, input model.UserLoginInput) (*model
 		UserID:   user.ID,
 		Username: user.Username,
 		Email:    user.Email,
+		Role:     user.Roles,
 	}
 	accessToken, err := s.authToken.GenerateToken(tokenPayload)
 	if err != nil {

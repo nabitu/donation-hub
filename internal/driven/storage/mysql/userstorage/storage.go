@@ -85,9 +85,17 @@ func (s Storage) HasUsername(ctx context.Context, username string) (bool, error)
 
 func (s Storage) GetUserByUsername(ctx context.Context, username string) (*model.User, error) {
 	var du DatabaseUser
-	query := "SELECT * FROM users WHERE username = ?"
-	err := s.container.Connection.DB.Get(&du, query, username)
+	query := "SELECT id, username, password, created_at FROM users WHERE username = ?"
+	err := s.container.Connection.DB.GetContext(ctx, &du, query, username)
 
+	if err != nil {
+		return nil, err
+	}
+
+	// get role on user_role table
+	var roles []string
+	rolesQuery := "SELECT role FROM user_roles WHERE user_id = ?"
+	err = s.container.Connection.DB.SelectContext(ctx, &roles, rolesQuery, du.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -97,6 +105,7 @@ func (s Storage) GetUserByUsername(ctx context.Context, username string) (*model
 		Username: du.Username,
 		Email:    du.Email,
 		Password: du.Password,
+		Roles:    roles,
 	}, nil
 }
 
@@ -124,6 +133,8 @@ func (s Storage) GetUser(ctx context.Context, input model.ListUserInput) (*[]mod
 	var users []DatabaseUser
 	var err error
 
+	// misal create colum baru, name, maka structnya akan error
+
 	if input.Role == "" {
 		query = `SELECT users.*, GROUP_CONCAT(user_roles.role) AS roles
 				FROM users
@@ -131,7 +142,9 @@ func (s Storage) GetUser(ctx context.Context, input model.ListUserInput) (*[]mod
 				WHERE user_roles.role IN ("donor", "requester")
 				GROUP BY users.id LIMIT ? OFFSET ? `
 
+		s.container.Connection.DB.Unsafe() // salah satu cara untuk meminimalisir error struct
 		err = s.container.Connection.DB.Select(&users, query, input.Limit, offset)
+
 		if err != nil {
 			return nil, nil, errors.New(fmt.Sprintf("error when get user: %v", err))
 		}

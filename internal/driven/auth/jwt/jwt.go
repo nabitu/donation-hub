@@ -15,9 +15,10 @@ type service struct {
 }
 
 type MyCustomClaims struct {
-	UserID   string `json:"user_id"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
+	UserID   string   `json:"user_id"`
+	Username string   `json:"username"`
+	Email    string   `json:"email"`
+	Role     []string `json:"role"`
 	jwt.RegisteredClaims
 }
 
@@ -27,6 +28,7 @@ func (s service) GenerateToken(i model.AuthPayload) (token string, err error) {
 		UserID:   userIDStr,
 		Username: i.Username,
 		Email:    i.Email,
+		Role:     i.Role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
 			Issuer:    s.container.Config.TokenIssuer,

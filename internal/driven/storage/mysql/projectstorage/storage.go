@@ -118,7 +118,9 @@ func (s *Storage) ListProject(ctx context.Context, input model.ListProjectInput)
 		args = append(args, input.Limit)
 	}
 
-	if err = s.container.Connection.DB.Select(&projects, query); err != nil {
+	fmt.Println(args)
+
+	if err = s.container.Connection.DB.Select(&projects, query, args); err != nil {
 		fmt.Println(err)
 		return
 	}
@@ -156,7 +158,7 @@ func (s *Storage) ListProject(ctx context.Context, input model.ListProjectInput)
 func (s *Storage) GetProjectById(ctx context.Context, input model.GetProjectByIdInput) (o model.GetProjectByIdOutput, err error) {
 	var p DatabaseProject
 	query := `
-		SELECT 
+		SELECT
 			p.*,
 			COALESCE((
 				SELECT SUM(d.amount)
@@ -164,18 +166,18 @@ func (s *Storage) GetProjectById(ctx context.Context, input model.GetProjectById
 				WHERE d.project_id = p.id), 0
 			) AS collection_amount,
 			(
-				SELECT GROUP_CONCAT(url) 
-				FROM project_images pi 
+				SELECT GROUP_CONCAT(url)
+				FROM project_images pi
 				WHERE pi.project_id = p.id
 			) AS image_urls,
 			u.id AS requester_id,
 			u.username AS requester_username,
 			u.email AS requester_email
-		FROM 
+		FROM
 			projects p
-		JOIN 
+		JOIN
 			users u ON u.id = p.requester_id
-		LEFT JOIN 
+		LEFT JOIN
 			donations d ON d.project_id = p.id AND p.id = ?
 	`
 	err = s.container.Connection.DB.Get(&p, query, input.ProjectId)
@@ -217,7 +219,7 @@ func (s *Storage) DonateToProject(ctx context.Context, input model.DonateToProje
 func (s *Storage) ListDonationByProjectId(ctx context.Context, input model.ListProjectDonationInput) (output model.ListProjectDonationOutput, err error) {
 	// write query get data from table donation
 	query := `
-	SELECT 
+	SELECT
 		d.id as id,
 		d.amount as amount,
 		d.currency as currency,
@@ -225,11 +227,11 @@ func (s *Storage) ListDonationByProjectId(ctx context.Context, input model.ListP
 		d.donor_id as donor_id,
 		u.username AS donor_username,
 		d.created_at AS created_at
-	FROM 
+	FROM
 		donations d
-	JOIN 
+	JOIN
 		users u ON u.id = d.donor_id
-	WHERE 
+	WHERE
 		d.project_id = ?
 	`
 	var donations []model.Donation
