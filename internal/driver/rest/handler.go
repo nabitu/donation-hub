@@ -3,6 +3,7 @@ package rest
 import (
 	"encoding/json"
 	"fmt"
+	_type "github.com/isdzulqor/donation-hub/internal/core/type"
 	"net/http"
 	"strconv"
 
@@ -183,7 +184,7 @@ func (h *Handler) HandleProjects(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) HandleProjectDetail(w http.ResponseWriter, r *http.Request) {
 	var req model.GetProjectByIdInput
-	projectIDStr := r.URL.Query().Get("id")
+	projectIDStr := r.PathValue("id")
 	projectID, err := strconv.ParseInt(projectIDStr, 10, 64)
 	if err != nil {
 		fmt.Println("error parsing project ID", err)
@@ -193,14 +194,19 @@ func (h *Handler) HandleProjectDetail(w http.ResponseWriter, r *http.Request) {
 	req.ProjectId = projectID
 
 	// Call the project service to get the project detail
-	project, err := h.ProjectService.GetProjectById(r.Context(), req)
+	modelProject, err := h.ProjectService.GetProjectById(r.Context(), req)
 	if err != nil {
 		fmt.Println("error getting project detail", err)
 		ResponseErrorBadRequest(w, err.Error())
 		return
 	}
 
-	ResponseSuccess(w, project)
+	if modelProject.Status == _type.PROJECT_NEED_REVIEW {
+		ResponseErrorNotFound(w, "project not found")
+		return
+	}
+
+	ResponseSuccess(w, modelProject)
 }
 
 func (h *Handler) HandleDonateProject(w http.ResponseWriter, r *http.Request) {
