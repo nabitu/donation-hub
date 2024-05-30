@@ -198,6 +198,18 @@ func (s *Storage) DonateToProject(ctx context.Context, input model.DonateToProje
 }
 
 func (s *Storage) ListDonationByProjectId(ctx context.Context, input model.ListProjectDonationInput) (*model.ListProjectDonationOutput, error) {
+
+	p, err := s.storage.GetProjectById(ctx, model.GetProjectByIdInput{ProjectId: input.ProjectId})
+
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("failed to get project, err: %s", err.Error()))
+	}
+
+	// jika status project masih need_review, maka tidak bisa donate
+	if p.Status == _type.PROJECT_NEED_REVIEW {
+		return nil, errors.New("ERR_PROJECT_NEED_REVIEW")
+	}
+
 	output, err := s.storage.ListDonationByProjectId(ctx, input)
 
 	if err != nil {
