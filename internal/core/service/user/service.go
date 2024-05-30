@@ -29,7 +29,10 @@ func New(storage DataStorage, authToken auth.Service) Service {
 }
 
 func (s *Storage) Register(ctx context.Context, input model.UserRegisterInput) (*model.UserRegisterOutput, error) {
-	// todo: add validation for input here
+	err := input.Validate()
+	if err != nil {
+		return nil, err
+	}
 
 	hasEmail, err := s.storage.HasEmail(ctx, input.Email)
 	if hasEmail {

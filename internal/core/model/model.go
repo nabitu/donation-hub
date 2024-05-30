@@ -2,6 +2,7 @@ package model
 
 import (
 	"errors"
+	"github.com/isdzulqor/donation-hub/internal/utill/validator"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/jmoiron/sqlx"
@@ -32,10 +33,14 @@ type Container struct {
 }
 
 type UserRegisterInput struct {
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	Role     string `json:"role"`
+	Username string `json:"username" validate:"required"`
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=3,max=20"`
+	Role     string `json:"role" validate:"required"`
+}
+
+func (u UserRegisterInput) Validate() error {
+	return validator.Validate().Struct(u)
 }
 
 type UserRegisterOutput struct {
