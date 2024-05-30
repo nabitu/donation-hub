@@ -85,7 +85,7 @@ func (s Storage) HasUsername(ctx context.Context, username string) (bool, error)
 
 func (s Storage) GetUserByUsername(ctx context.Context, username string) (*model.User, error) {
 	var du DatabaseUser
-	query := "SELECT id, username, password, created_at FROM users WHERE username = ?"
+	query := "SELECT id, username, email,  password, created_at FROM users WHERE username = ?"
 	err := s.container.Connection.DB.GetContext(ctx, &du, query, username)
 
 	if err != nil {
