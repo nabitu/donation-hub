@@ -7,6 +7,7 @@ import (
 )
 
 type httpError struct {
+	Ok         bool   `json:"ok"`
 	StatusCode int    `json:"-"`
 	Message    string `json:"msg"`
 	Err        string `json:"err"`
@@ -46,6 +47,7 @@ func ResponseErrorUnauthorized(w http.ResponseWriter, msg string) {
 
 func ResponseErrorBadRequest(w http.ResponseWriter, msg string) {
 	res := &httpError{
+		Ok:         false,
 		StatusCode: http.StatusBadRequest,
 		Message:    msg,
 		Ts:         time.Now().Unix(),
