@@ -39,7 +39,7 @@ func New(container *model.Container) *Storage {
 
 func (s *Storage) Submit(ctx context.Context, input model.SubmitProjectInput) (projectId int64, err error) {
 	query := `INSERT INTO projects (name, description, target_amount, currency, status, requester_id, due_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
-	res, err := s.container.Connection.DB.Exec(query, input.Title, input.Description, input.TargetAmount, input.Currency, _type.PROJECT_NEED_REVIEW, input.UserID, input.DueAt, time.Now().Unix(), time.Now().Unix())
+	res, err := s.container.Connection.DB.ExecContext(ctx, query, input.Title, input.Description, input.TargetAmount, input.Currency, _type.PROJECT_NEED_REVIEW, input.UserID, input.DueAt, time.Now().Unix(), time.Now().Unix())
 
 	fmt.Println("ini query submit")
 	fmt.Println(query)
@@ -55,7 +55,7 @@ func (s *Storage) Submit(ctx context.Context, input model.SubmitProjectInput) (p
 	}
 
 	// Prepare SQL statement for batch insert
-	stmt, err := s.container.Connection.DB.Preparex(`
+	stmt, err := s.container.Connection.DB.PreparexContext(ctx, `
 		INSERT INTO project_images (project_id, url)
 		VALUES (?, ?)
 	`)
@@ -77,7 +77,7 @@ func (s *Storage) Submit(ctx context.Context, input model.SubmitProjectInput) (p
 
 func (s *Storage) ReviewByAdmin(ctx context.Context, input model.ReviewProjectByAdminInput) (err error) {
 	query := `UPDATE projects SET status = ?, updated_at = ? WHERE id = ?`
-	_, err = s.container.Connection.DB.Exec(query, input.Status, time.Now().Unix(), input.ProjectId)
+	_, err = s.container.Connection.DB.ExecContext(ctx, query, input.Status, time.Now().Unix(), input.ProjectId)
 	if err != nil {
 		err = fmt.Errorf("error updating user: %v", err)
 	}
@@ -120,7 +120,7 @@ func (s *Storage) ListProject(ctx context.Context, input model.ListProjectInput)
 
 	fmt.Println(args)
 
-	if err = s.container.Connection.DB.Select(&projects, query, args); err != nil {
+	if err = s.container.Connection.DB.SelectContext(ctx, &projects, query, args...); err != nil {
 		fmt.Println(err)
 		return
 	}
@@ -180,7 +180,7 @@ func (s *Storage) GetProjectById(ctx context.Context, input model.GetProjectById
 		LEFT JOIN
 			donations d ON d.project_id = p.id AND p.id = ?
 	`
-	err = s.container.Connection.DB.Get(&p, query, input.ProjectId)
+	err = s.container.Connection.DB.GetContext(ctx, &p, query, input.ProjectId)
 
 	o.ID = p.ID
 	o.Title = p.Name
@@ -208,7 +208,7 @@ func (s *Storage) DonateToProject(ctx context.Context, input model.DonateToProje
 	VALUES (?, ?, ?, ?, ?, ?)
 	`
 	fmt.Println(query)
-	_, err = s.container.Connection.DB.Exec(query, input.ProjectId, input.UserID, input.Message, input.Amount, input.Currency, time.Now().Unix())
+	_, err = s.container.Connection.DB.ExecContext(ctx, query, input.ProjectId, input.UserID, input.Message, input.Amount, input.Currency, time.Now().Unix())
 	if err != nil {
 		return
 	}
@@ -235,7 +235,7 @@ func (s *Storage) ListDonationByProjectId(ctx context.Context, input model.ListP
 		d.project_id = ?
 	`
 	var donations []model.Donation
-	err = s.container.Connection.DB.Select(&donations, query, input.ProjectId)
+	err = s.container.Connection.DB.SelectContext(ctx, &donations, query, input.ProjectId)
 
 	fmt.Println(donations)
 	fmt.Println(err)
@@ -248,7 +248,7 @@ func (s *Storage) ListDonationByProjectId(ctx context.Context, input model.ListP
 func (s *Storage) HasName(ctx context.Context, name string) (bool, error) {
 	query := "select count(*) from projects where name = ?"
 	var exists = false
-	err := s.container.Connection.DB.Get(&exists, query, name)
+	err := s.container.Connection.DB.GetContext(ctx, &exists, query, name)
 
 	return exists, err
 }
