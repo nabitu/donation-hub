@@ -112,6 +112,15 @@ func (s *Storage) ReviewProjectByAdmin(ctx context.Context, input model.ReviewPr
 		return errors.New("status must be approved or rejected")
 	}
 
+	// jika status project bukan need_review maka tidak bisa review
+	p, err := s.storage.GetProjectById(ctx, model.GetProjectByIdInput{ProjectId: input.ProjectId})
+	if err != nil {
+		return errors.New(fmt.Sprintf("failed to get project, err: %s", err.Error()))
+	}
+	if p.Status != _type.PROJECT_NEED_REVIEW {
+		return errors.New("ERR_PROJECT_NOT_NEED_REVIEW")
+	}
+
 	err = s.storage.ReviewByAdmin(ctx, input)
 	if err != nil {
 		return errors.New(fmt.Sprintf("failed to review project, err: %s", err.Error()))
