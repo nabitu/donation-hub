@@ -154,12 +154,23 @@ func (h *Handler) HandleProjectReview(w http.ResponseWriter, r *http.Request) {
 	if r.Context().Value("auth_id") != "" {
 		req.UserID = r.Context().Value("auth_id").(int64)
 	}
+	projectIDStr := r.PathValue("id")
+	projectID, err := strconv.ParseInt(projectIDStr, 10, 64)
+	if err != nil {
+		fmt.Println("error parsing project ID", err)
+		ResponseErrorBadRequest(w, "invalid project ID")
+		return
+	}
+	req.ProjectId = projectID
+
 	err = h.ProjectService.ReviewProjectByAdmin(r.Context(), req)
 	if err != nil {
+		fmt.Println("error submit review project", err)
+		ResponseErrorBadRequest(w, err.Error())
 		return
 	}
 
-	ResponseSuccess(w, "")
+	ResponseSuccess(w, nil)
 }
 
 func (h *Handler) HandleProjects(w http.ResponseWriter, r *http.Request) {
@@ -226,6 +237,17 @@ func (h *Handler) HandleDonateProject(w http.ResponseWriter, r *http.Request) {
 	if r.Context().Value("auth_id") != "" {
 		req.UserID = r.Context().Value("auth_id").(int64)
 	}
+
+	// get project id
+	projectIDStr := r.PathValue("id")
+	projectID, err := strconv.ParseInt(projectIDStr, 10, 64)
+	if err != nil {
+		fmt.Println("error parsing project ID", err)
+		ResponseErrorBadRequest(w, "invalid project ID")
+		return
+	}
+	req.ProjectId = projectID
+
 	err = h.ProjectService.DonateToProject(r.Context(), req)
 	if err != nil {
 		fmt.Println("error donating to project", err)
@@ -238,10 +260,18 @@ func (h *Handler) HandleDonateProject(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) HandleProjectDonations(w http.ResponseWriter, r *http.Request) {
 	var req model.ListProjectDonationInput
-	req.ProjectId, _ = strconv.ParseInt(r.URL.Query().Get("id"), 10, 64)
 	req.LastKey = r.URL.Query().Get("last_key")
 	req.Limit, _ = strconv.ParseInt(r.URL.Query().Get("limit"), 10, 64)
 
+	// get project id
+	projectIDStr := r.PathValue("id")
+	projectID, err := strconv.ParseInt(projectIDStr, 10, 64)
+	if err != nil {
+		fmt.Println("error parsing project ID", err)
+		ResponseErrorBadRequest(w, "invalid project ID")
+		return
+	}
+	req.ProjectId = projectID
 	// Call the project service to get the project donations
 	donations, err := h.ProjectService.ListDonationByProjectId(r.Context(), req)
 	if err != nil {
