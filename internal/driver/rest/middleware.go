@@ -10,9 +10,6 @@ import (
 func RecoverPanicMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
-			// print error
-			fmt.Println("recovering from panic")
-
 			if err := recover(); err != nil {
 				// print error
 				fmt.Println("panic error", err)
@@ -28,58 +25,57 @@ func authTokenMiddleware(next http.HandlerFunc, c *Config, isOptional bool, role
 	return func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 
-		ctx := context.WithValue(r.Context(), "token", "")
+		ctx := context.WithValue(r.Context(), "withAuth", false)
 
-		next.ServeHTTP(w, r.WithContext(ctx))
-		return
-
-		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
-			ResponseErrorInvalidAccessToken(w, "Invalid access token")
+		// if route authorization is optional
+		if isOptional && authHeader == "" {
+			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
 
-		token := strings.TrimPrefix(authHeader, "Bearer ")
-		ctx = context.WithValue(r.Context(), "token", token)
+		token, err := getToken(authHeader)
+		if err != nil {
+			return
+		}
+
 		payload, err := c.AuthTokenService.ValidateToken(token)
 
-		if isOptional {
-			// isOptional = true, means the token does not have to be valid (used in the list of projects)
-			if err == nil {
-				ctx = context.WithValue(ctx, "auth_id", payload.UserID)
-				ctx = context.WithValue(ctx, "auth_username", payload.Username)
-				ctx = context.WithValue(ctx, "auth_email", payload.Email)
-				ctx = context.WithValue(ctx, "auth_roles", payload.Role)
-			}
+		ctx = context.WithValue(ctx, "withAuth", true)
+		ctx = context.WithValue(ctx, "payload", payload)
+		ctx = context.WithValue(ctx, "auth_id", payload.UserID)
+		ctx = context.WithValue(ctx, "auth_username", payload.Username)
+		ctx = context.WithValue(ctx, "auth_email", payload.Email)
+		ctx = context.WithValue(ctx, "auth_roles", payload.Role)
+
+		if len(roles) > 0 && validRole(roles, payload.Role) {
+			next.ServeHTTP(w, r.WithContext(ctx))
 		} else {
-			// isOptionalnya = false, then the token must be correct
-			if err != nil {
-				ResponseErrorInvalidAccessToken(w, "Invalid access token")
-				return
-			}
-
-			// jika roles tidak kosong, maka cek apakah role user ada di dalam roles
-			if len(roles) > 0 {
-				isRoleValid := false
-				for _, role := range roles {
-					for _, userRole := range payload.Role {
-						if role == userRole {
-							isRoleValid = true
-							break
-						}
-					}
-				}
-
-				if !isRoleValid {
-					ResponseErrorForbiddenAccess(w, "user doesn't have enough authorization")
-					return
-				}
-			}
-
-			ctx = context.WithValue(ctx, "auth_id", payload.UserID)
-			ctx = context.WithValue(ctx, "auth_username", payload.Username)
-			ctx = context.WithValue(ctx, "auth_email", payload.Email)
-			ctx = context.WithValue(ctx, "auth_roles", payload.Role)
+			ResponseErrorForbiddenAccess(w, "user doesn't have enough authorization")
+			return
 		}
+
 		next.ServeHTTP(w, r.WithContext(ctx))
 	}
+}
+
+func getToken(tokenString string) (string, error) {
+	token := strings.Split(tokenString, " ")
+	if len(token) != 2 {
+		return "", fmt.Errorf("invalid token format")
+	}
+	if strings.ToLower(token[0]) != "bearer" {
+		return "", fmt.Errorf("invalid token format")
+	}
+	return token[1], nil
+}
+
+func validRole(roles []string, userRole []string) bool {
+	for _, role := range roles {
+		for _, uRole := range userRole {
+			if role == uRole {
+				return true
+			}
+		}
+	}
+	return false
 }

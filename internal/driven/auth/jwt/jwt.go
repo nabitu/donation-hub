@@ -62,7 +62,7 @@ func (s service) ValidateToken(tokenString string) (*model.AuthPayload, error) {
 
 	claims, ok := token.Claims.(*MyCustomClaims)
 	if ok && token.Valid {
-		fmt.Println("id:"+claims.UserID, "username:"+claims.Username, "email:"+claims.Email)
+		fmt.Println("id:"+claims.UserID, "username:"+claims.Username, "email:"+claims.Email, "role:"+claims.Role[0])
 		id, err := strconv.Atoi(claims.UserID)
 		if err != nil {
 			return nil, err

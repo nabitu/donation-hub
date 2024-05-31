@@ -182,16 +182,20 @@ func (h *Handler) HandleProjects(w http.ResponseWriter, r *http.Request) {
 	}
 	req.Limit = limit
 
-	authId := fmt.Sprintf("%v", r.Context().Value("auth_id"))
-	fmt.Println("authId", authId)
-
-	if authId != "" {
+	if r.Context().Value("withAuth") == true {
 		req.UserID = r.Context().Value("auth_id").(int64)
+		roles := r.Context().Value("auth_roles").([]string)
+		// if roles is admin, make r.isAdmin = true
+		for _, role := range roles {
+			if role == "admin" {
+				req.IsAdmin = true
+				break
+			}
+		}
 	}
 
 	projects, err := h.ProjectService.ListProject(r.Context(), req)
 	if err != nil {
-		fmt.Println("error get projects", err)
 		ResponseErrorBadRequest(w, err.Error())
 		return
 	}
