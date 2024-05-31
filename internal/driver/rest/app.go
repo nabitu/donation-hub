@@ -62,8 +62,10 @@ func StartApp(c Config) error {
 	app.HandleFunc("POST /projects", authTokenMiddleware(handler.HandleSubmitProject, &c, false, []string{"requester"}))
 	app.HandleFunc("POST /projects/{id}/donations", authTokenMiddleware(handler.HandleDonateProject, &c, false, []string{"donor"}))
 
+	appHandle := RecoverPanicMiddleware(app)
+
 	fmt.Println("Starting app on port", c.Port)
-	_ = http.ListenAndServe(":"+c.Port, app)
+	_ = http.ListenAndServe(":"+c.Port, appHandle)
 
 	return nil
 }

@@ -182,7 +182,10 @@ func (h *Handler) HandleProjects(w http.ResponseWriter, r *http.Request) {
 	}
 	req.Limit = limit
 
-	if r.Context().Value("auth_id") != "" {
+	authId := fmt.Sprintf("%v", r.Context().Value("auth_id"))
+	fmt.Println("authId", authId)
+
+	if authId != "" {
 		req.UserID = r.Context().Value("auth_id").(int64)
 	}
 
