@@ -88,7 +88,10 @@ func (s *Storage) Login(ctx context.Context, input model.UserLoginInput) (*model
 }
 
 func (s *Storage) ListUser(ctx context.Context, input model.ListUserInput) (output *model.ListUserOutput, err error) {
-	// todo: add validation for input here
+	err = input.Validate()
+	if err != nil {
+		return nil, err
+	}
 
 	userStorages, total, err := s.storage.GetUser(ctx, input)
 	if err != nil {
