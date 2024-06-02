@@ -3,9 +3,10 @@ package rest
 import (
 	"encoding/json"
 	"fmt"
-	_type "github.com/isdzulqor/donation-hub/internal/core/type"
 	"net/http"
 	"strconv"
+
+	_type "github.com/isdzulqor/donation-hub/internal/core/type"
 
 	"github.com/isdzulqor/donation-hub/internal/core/model"
 	"github.com/isdzulqor/donation-hub/internal/core/service/project"
@@ -181,6 +182,9 @@ func (h *Handler) HandleProjects(w http.ResponseWriter, r *http.Request) {
 		limit = 10
 	}
 	req.Limit = limit
+
+	lastKey := r.URL.Query().Get("last_key")
+	req.LastKey = lastKey
 
 	if r.Context().Value("withAuth") == true {
 		req.UserID = r.Context().Value("auth_id").(int64)
