@@ -45,6 +45,9 @@
             <!-- Registration Form (Initially hidden) -->
             <div class="col-md-6" id="registerForm" x-show="!showLoginForm">
                 <h2>Register</h2>
+                <div x-show="registerSuccess" class="alert alert-success" role="alert">
+                    Registration successful. Please login to continue.
+                </div>
                 <form @submit.prevent="register">
                     <div class="form-group">
                         <label for="registrationUsername">Username</label>
@@ -105,8 +108,9 @@
                             password: this.password
                         });
                         if (response.status === 200) {
-                            const json = response.data;
-                            console.log(json);
+                            console.log('Login successful');
+                            localStorage.setItem('token', response.data.data.access_token);
+                            window.location.href = '/index.html';
                         } else {
                             this.loginError = 'Invalid username or password';
                         }
@@ -117,7 +121,25 @@
                 async register(e) {
                     e.preventDefault();
                     console.log('Registering with username:', this.rusername, 'email:', this.remail, 'and password', this.rpassword)
+
+                    try {
+                        const response = await axios.post(`${this.baseUrl}/users/register`, {
+                            username: this.rusername,
+                            email: this.remail,
+                            password: this.rpassword,
+                            role: 'requester'
+                        });
+                        if (response.status === 200) {
+                            console.log('Registration successful');
+                            this.showLoginForm = true;
+                        } else {
+                            console.error('Registration failed');
+                        }
+                    } catch (error) {
+                        console.error(error);
+                    }
                 },
+                registerSuccess: false,
                 loginError: '',
                 baseUrl: 'http://localhost:8180',
                 showLoginForm: true,
