@@ -2,8 +2,8 @@ package model
 
 import (
 	"errors"
-
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/isdzulqor/donation-hub/internal/utill/validator"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -32,10 +32,14 @@ type Container struct {
 }
 
 type UserRegisterInput struct {
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	Role     string `json:"role"`
+	Username string `json:"username" validate:"required"`
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=3,max=20"`
+	Role     string `json:"role" validate:"required"`
+}
+
+func (u UserRegisterInput) Validate() error {
+	return validator.Validate().Struct(u)
 }
 
 type UserRegisterOutput struct {
@@ -45,8 +49,12 @@ type UserRegisterOutput struct {
 }
 
 type UserLoginInput struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Username string `json:"username" validate:"required"`
+	Password string `json:"password" validate:"required,min=3,max=20"`
+}
+
+func (i UserLoginInput) Validate() error {
+	return validator.Validate().Struct(i)
 }
 
 type UserLoginOutput struct {
@@ -57,9 +65,13 @@ type UserLoginOutput struct {
 }
 
 type ListUserInput struct {
-	Limit int64  `json:"limit"`
-	Page  int64  `json:"page"`
-	Role  string `json:"role"`
+	Limit int64  `json:"limit" validate:"omitempty,min=1"`
+	Page  int64  `json:"page" validate:"omitempty,min=1"`
+	Role  string `json:"role" validate:"omitempty,oneof=donor requester"`
+}
+
+func (s ListUserInput) Validate() error {
+	return validator.Validate().Struct(s)
 }
 
 // UserStorage raw data user from database
@@ -112,13 +124,17 @@ type RequestUploadUrlOutput struct {
 }
 
 type SubmitProjectInput struct {
-	UserID       int64    `json:"user_id"` // user auth id from jwt or other
-	Title        string   `json:"title"`
-	Description  string   `json:"description"`
-	ImageURLs    []string `json:"image_urls"`
-	DueAt        int64    `json:"due_at"`
-	TargetAmount int64    `json:"target_amount"`
-	Currency     string   `json:"currency"`
+	UserID       int64    `json:"user_id"`
+	Title        string   `json:"title" validate:"required,min=3,max=100"`
+	Description  string   `json:"description" validate:"required,min=3,max=1000"`
+	ImageURLs    []string `json:"image_urls" validate:"required,min=1,max=5"`
+	DueAt        int64    `json:"due_at" validate:"required"`
+	TargetAmount int64    `json:"target_amount" validate:"required,min=1"`
+	Currency     string   `json:"currency" validate:"required"`
+}
+
+func (i SubmitProjectInput) Validate() error {
+	return validator.Validate().Struct(i)
 }
 
 type SubmitProjectOutput struct {
@@ -148,6 +164,7 @@ type ListProjectInput struct {
 	StartTs int64  `json:"start_ts"` // jangan lupa, ini nanti Unix timestamp
 	EndTs   int64  `json:"end_ts"`   // jangan lupa, ini nanti Unix timestamp
 	LastKey string `json:"last_key"`
+	IsAdmin bool   `json:"is_admin"`
 }
 
 type Requester struct {
@@ -218,14 +235,12 @@ type Donor struct {
 }
 
 type Donation struct {
-	ID            int64  `json:"id"`
-	Amount        int64  `json:"amount"`
-	Currency      string `json:"currency"`
-	Message       string `json:"message"`
-	Donor         Donor  `json:"donor"`
-	CreatedAt     int64  `json:"created_at" db:"created_at"`
-	DonorId       int64  `json:"donor_id" db:"donor_id"`
-	DonorUsername string `json:"donor_username" db:"donor_username"`
+	ID        int64  `json:"id"`
+	Amount    int64  `json:"amount"`
+	Currency  string `json:"currency"`
+	Message   string `json:"message"`
+	Donor     Donor  `json:"donor"`
+	CreatedAt int64  `json:"created_at"`
 }
 
 type ListProjectDonationOutput struct {
@@ -237,4 +252,9 @@ type AuthPayload struct {
 	UserID   int64
 	Username string
 	Email    string
+	Role     []string
+}
+
+type UserMeInput struct {
+	UserID int64
 }

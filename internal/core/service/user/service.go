@@ -19,6 +19,7 @@ type Service interface {
 	Register(context.Context, model.UserRegisterInput) (*model.UserRegisterOutput, error)
 	Login(context.Context, model.UserLoginInput) (*model.UserLoginOutput, error)
 	ListUser(context.Context, model.ListUserInput) (*model.ListUserOutput, error)
+	Me(context.Context, model.UserMeInput) (*model.User, error)
 }
 
 func New(storage DataStorage, authToken auth.Service) Service {
@@ -29,7 +30,10 @@ func New(storage DataStorage, authToken auth.Service) Service {
 }
 
 func (s *Storage) Register(ctx context.Context, input model.UserRegisterInput) (*model.UserRegisterOutput, error) {
-	// todo: add validation for input here
+	err := input.Validate()
+	if err != nil {
+		return nil, err
+	}
 
 	hasEmail, err := s.storage.HasEmail(ctx, input.Email)
 	if hasEmail {
@@ -54,7 +58,11 @@ func (s *Storage) Register(ctx context.Context, input model.UserRegisterInput) (
 }
 
 func (s *Storage) Login(ctx context.Context, input model.UserLoginInput) (*model.UserLoginOutput, error) {
-	// todo: add validation for input here
+	// validation for input here
+	err := input.Validate()
+	if err != nil {
+		return nil, err
+	}
 
 	user, err := s.storage.GetUserByUsername(ctx, input.Username)
 	if err != nil || user.Password != input.Password {
@@ -65,6 +73,7 @@ func (s *Storage) Login(ctx context.Context, input model.UserLoginInput) (*model
 		UserID:   user.ID,
 		Username: user.Username,
 		Email:    user.Email,
+		Role:     user.Roles,
 	}
 	accessToken, err := s.authToken.GenerateToken(tokenPayload)
 	if err != nil {
@@ -80,7 +89,10 @@ func (s *Storage) Login(ctx context.Context, input model.UserLoginInput) (*model
 }
 
 func (s *Storage) ListUser(ctx context.Context, input model.ListUserInput) (output *model.ListUserOutput, err error) {
-	// todo: add validation for input here
+	err = input.Validate()
+	if err != nil {
+		return nil, err
+	}
 
 	userStorages, total, err := s.storage.GetUser(ctx, input)
 	if err != nil {
@@ -114,4 +126,13 @@ func (s *Storage) ListUser(ctx context.Context, input model.ListUserInput) (outp
 	}
 
 	return
+}
+
+func (s *Storage) Me(ctx context.Context, i model.UserMeInput) (*model.User, error) {
+	me, err := s.storage.GetUserById(ctx, i.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	return me, nil
 }

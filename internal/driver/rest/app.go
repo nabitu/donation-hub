@@ -2,8 +2,9 @@ package rest
 
 import (
 	"fmt"
-	"github.com/isdzulqor/donation-hub/internal/core/service/auth"
 	"net/http"
+
+	"github.com/isdzulqor/donation-hub/internal/core/service/auth"
 
 	"github.com/isdzulqor/donation-hub/internal/core/service/project"
 	"github.com/isdzulqor/donation-hub/internal/core/service/user"
@@ -45,20 +46,28 @@ func StartApp(c Config) error {
 
 	handler := NewHandler(c.ProjectService, c.UserService)
 
+	// public routes
 	app.HandleFunc("GET /", handler.DefaultHandler)
 	app.HandleFunc("POST /users/register", handler.HandleRegister)
 	app.HandleFunc("POST /users/login", handler.HandleLogin)
 	app.HandleFunc("GET /users", handler.HandleUsers)
-	app.HandleFunc("GET /projects/upload", authTokenMiddleware(handler.HandleRequestProjectUrl, &c, false))
-	app.HandleFunc("POST /projects", authTokenMiddleware(handler.HandleSubmitProject, &c, false))
-	app.HandleFunc("PUT /projects/{id}/review", authTokenMiddleware(handler.HandleProjectReview, &c, false))
-	app.HandleFunc("GET /projects", authTokenMiddleware(handler.HandleProjects, &c, true))
 	app.HandleFunc("GET /projects/{id}", handler.HandleProjectDetail)
-	app.HandleFunc("POST /projects/{id}/donations", authTokenMiddleware(handler.HandleDonateProject, &c, false))
 	app.HandleFunc("GET /projects/{id}/donations", handler.HandleProjectDonations)
 
+	// optional token routes
+	app.HandleFunc("GET /projects", authTokenMiddleware(handler.HandleProjects, &c, true, []string{"admin", "requester", "donor"}))
+
+	// token required routes
+	app.HandleFunc("GET /me", authTokenMiddleware(handler.HandleMe, &c, false, []string{"admin", "requester", "donor"}))
+	app.HandleFunc("GET /projects/upload", authTokenMiddleware(handler.HandleRequestProjectUrl, &c, false, []string{"requester"}))
+	app.HandleFunc("PUT /projects/{id}/review", authTokenMiddleware(handler.HandleProjectReview, &c, false, []string{"admin"}))
+	app.HandleFunc("POST /projects", authTokenMiddleware(handler.HandleSubmitProject, &c, false, []string{"requester"}))
+	app.HandleFunc("POST /projects/{id}/donations", authTokenMiddleware(handler.HandleDonateProject, &c, false, []string{"donor"}))
+
+	appHandle := RecoverPanicMiddleware(app)
+	appHandle = corsMiddleware(appHandle)
 	fmt.Println("Starting app on port", c.Port)
-	http.ListenAndServe(":"+c.Port, app)
+	_ = http.ListenAndServe(":"+c.Port, appHandle)
 
 	return nil
 }

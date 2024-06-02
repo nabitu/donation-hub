@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strconv"
 
+	_type "github.com/isdzulqor/donation-hub/internal/core/type"
+
 	"github.com/isdzulqor/donation-hub/internal/core/model"
 	"github.com/isdzulqor/donation-hub/internal/core/service/project"
 	"github.com/isdzulqor/donation-hub/internal/core/service/user"
@@ -108,7 +110,6 @@ func (h *Handler) HandleRequestProjectUrl(w http.ResponseWriter, r *http.Request
 	}
 
 	req.FileSize = fileSize
-	req.UserID = 3
 
 	response, err := h.ProjectService.RequestUploadUrl(r.Context(), req)
 	if err != nil {
@@ -129,7 +130,9 @@ func (h *Handler) HandleSubmitProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req.UserID = r.Context().Value("auth_id").(int64)
+	if r.Context().Value("auth_id") != "" {
+		req.UserID = r.Context().Value("auth_id").(int64)
+	}
 	response, err := h.ProjectService.SubmitProject(r.Context(), req)
 	if err != nil {
 		fmt.Println("error submit project", err)
@@ -149,13 +152,26 @@ func (h *Handler) HandleProjectReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req.UserID = r.Context().Value("auth_id").(int64)
+	if r.Context().Value("auth_id") != "" {
+		req.UserID = r.Context().Value("auth_id").(int64)
+	}
+	projectIDStr := r.PathValue("id")
+	projectID, err := strconv.ParseInt(projectIDStr, 10, 64)
+	if err != nil {
+		fmt.Println("error parsing project ID", err)
+		ResponseErrorBadRequest(w, "invalid project ID")
+		return
+	}
+	req.ProjectId = projectID
+
 	err = h.ProjectService.ReviewProjectByAdmin(r.Context(), req)
 	if err != nil {
+		fmt.Println("error submit review project", err)
+		ResponseErrorBadRequest(w, err.Error())
 		return
 	}
 
-	ResponseSuccess(w, "")
+	ResponseSuccess(w, nil)
 }
 
 func (h *Handler) HandleProjects(w http.ResponseWriter, r *http.Request) {
@@ -167,13 +183,23 @@ func (h *Handler) HandleProjects(w http.ResponseWriter, r *http.Request) {
 	}
 	req.Limit = limit
 
-	if r.Context().Value("auth_id") != "" {
+	lastKey := r.URL.Query().Get("last_key")
+	req.LastKey = lastKey
+
+	if r.Context().Value("withAuth") == true {
 		req.UserID = r.Context().Value("auth_id").(int64)
+		roles := r.Context().Value("auth_roles").([]string)
+		// if roles is admin, make r.isAdmin = true
+		for _, role := range roles {
+			if role == "admin" {
+				req.IsAdmin = true
+				break
+			}
+		}
 	}
 
 	projects, err := h.ProjectService.ListProject(r.Context(), req)
 	if err != nil {
-		fmt.Println("error get projects", err)
 		ResponseErrorBadRequest(w, err.Error())
 		return
 	}
@@ -183,7 +209,7 @@ func (h *Handler) HandleProjects(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) HandleProjectDetail(w http.ResponseWriter, r *http.Request) {
 	var req model.GetProjectByIdInput
-	projectIDStr := r.URL.Query().Get("id")
+	projectIDStr := r.PathValue("id")
 	projectID, err := strconv.ParseInt(projectIDStr, 10, 64)
 	if err != nil {
 		fmt.Println("error parsing project ID", err)
@@ -193,14 +219,19 @@ func (h *Handler) HandleProjectDetail(w http.ResponseWriter, r *http.Request) {
 	req.ProjectId = projectID
 
 	// Call the project service to get the project detail
-	project, err := h.ProjectService.GetProjectById(r.Context(), req)
+	modelProject, err := h.ProjectService.GetProjectById(r.Context(), req)
 	if err != nil {
 		fmt.Println("error getting project detail", err)
 		ResponseErrorBadRequest(w, err.Error())
 		return
 	}
 
-	ResponseSuccess(w, project)
+	if modelProject.Status == _type.PROJECT_NEED_REVIEW && r.Context().Value("isAdmin") == false {
+		ResponseErrorNotFound(w, "project not found")
+		return
+	}
+
+	ResponseSuccess(w, modelProject)
 }
 
 func (h *Handler) HandleDonateProject(w http.ResponseWriter, r *http.Request) {
@@ -214,7 +245,20 @@ func (h *Handler) HandleDonateProject(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Call the project service to donate to the project
-	req.UserID = r.Context().Value("auth_id").(int64)
+	if r.Context().Value("auth_id") != "" {
+		req.UserID = r.Context().Value("auth_id").(int64)
+	}
+
+	// get project id
+	projectIDStr := r.PathValue("id")
+	projectID, err := strconv.ParseInt(projectIDStr, 10, 64)
+	if err != nil {
+		fmt.Println("error parsing project ID", err)
+		ResponseErrorBadRequest(w, "invalid project ID")
+		return
+	}
+	req.ProjectId = projectID
+
 	err = h.ProjectService.DonateToProject(r.Context(), req)
 	if err != nil {
 		fmt.Println("error donating to project", err)
@@ -227,10 +271,24 @@ func (h *Handler) HandleDonateProject(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) HandleProjectDonations(w http.ResponseWriter, r *http.Request) {
 	var req model.ListProjectDonationInput
-	req.ProjectId, _ = strconv.ParseInt(r.URL.Query().Get("id"), 10, 64)
 	req.LastKey = r.URL.Query().Get("last_key")
-	req.Limit, _ = strconv.ParseInt(r.URL.Query().Get("limit"), 10, 64)
+	limit, err := strconv.ParseInt(r.URL.Query().Get("limit"), 10, 64)
+	if err != nil {
+		fmt.Println("error parsing limit", err)
+		ResponseErrorBadRequest(w, "invalid limit")
+		return
+	}
+	req.Limit = limit
 
+	// get project id
+	projectIDStr := r.PathValue("id")
+	projectID, err := strconv.ParseInt(projectIDStr, 10, 64)
+	if err != nil {
+		fmt.Println("error parsing project ID", err)
+		ResponseErrorBadRequest(w, "invalid project ID")
+		return
+	}
+	req.ProjectId = projectID
 	// Call the project service to get the project donations
 	donations, err := h.ProjectService.ListDonationByProjectId(r.Context(), req)
 	if err != nil {
@@ -240,4 +298,22 @@ func (h *Handler) HandleProjectDonations(w http.ResponseWriter, r *http.Request)
 	}
 
 	ResponseSuccess(w, donations)
+}
+
+func (h *Handler) HandleMe(w http.ResponseWriter, r *http.Request) {
+	var req model.UserMeInput
+
+	// Call the project service to donate to the project
+	if r.Context().Value("auth_id") != "" {
+		req.UserID = r.Context().Value("auth_id").(int64)
+	}
+
+	me, err := h.UserService.Me(r.Context(), req)
+	if err != nil {
+		fmt.Println("error get me", err)
+		ResponseErrorBadRequest(w, err.Error())
+		return
+	}
+
+	ResponseSuccess(w, me)
 }
