@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <title>Admin Panel</title>
+</head>
+
+<body x-data="app()">
+
+
+
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">DonationHub</a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div id="admin-page">
+            <h1>Admin Dashboard</h1>
+            <h2>Donation Projects</h2>
+            <ul>
+                <template x-for="project in projects">
+                    <li>
+                        <span x-text="project.title"></span> - Target Amount: <span x-text="project.target_amount"></span> <span x-text="project.currency"></span></span>
+                    </li>
+                </template>
+                <li x-show="hasNextPageProject"><a href="" @click.prevent="loadMoreProject">Load More</a></li>
+            </ul>
+            <h2>Donors</h2>
+            <ul>
+                <template x-for="user in donorUsers">
+                    <li x-text="user.username"></li>
+                </template>
+                <li x-show="hasNextPageDonor"><a href="" @click.prevent="loadMoreDonor">Load More</a></li>
+            </ul>
+            <h2>Requester</h2>
+            <ul>
+                <template x-for="user in requesterUsers">
+                    <li x-text="user.username"></li>
+                </template>
+                <li x-show="hasNextPageRequester"><a href="" @click.prevent="loadMoreRequester">Load More</a></li>
+            </ul>
+        </div>
+    </div>
+
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white mt-5">
+        <div class="container py-4">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>DonationHub</h5>
+                    <p>A platform connecting donors with those in need.</p>
+                </div>
+                <div class="col-md-6">
+                    <h5>Contact Us</h5>
+                    <ul>
+                        <li>Email: info@donationhub.com</li>
+                        <li>Phone: +1 123-456-7890</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="text-center py-2" style="background-color: #343a40;">
+            &copy; 2024 DonationHub. All rights reserved.
+        </div>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script defer>
+        function app() {
+            return {
+                async init() {
+                    console.log('Initialized');
+                    await this.getMe();
+                    if (this.isAdmin()) {
+                        console.log('Admin');
+                    } else {
+                        console.log('Not admin');
+                        window.location.href = '/login.html';
+                    }
+                    await this.getUserDonor();
+                    await this.getUserRequester();
+                    await this.getProjects();
+                },
+                loadMoreDonor() {
+                    this.getUserDonor();
+                },
+                loadMoreRequester() {
+                    this.getUserRequester();
+                },
+                loadMoreProject() {
+                    this.getProjects();
+                },
+                async getProjects() {
+                    try {
+                        const response = await axios.get(`${this.baseUrl}/projects?limit=10&last_key=${this.lastKeyProject}`, {
+                            headers: {
+                                Authorization: `Bearer ${localStorage.getItem('token')}`
+                            }
+                        });
+                        this.projects = [...this.projects, ...response.data.data.projects]
+                        if (response.data.data.last_key !== "") {
+                            this.lastKeyProject = response.data.data.last_key;
+                            this.hasNextPageProject = true;
+                        } else {
+                            this.hasNextPageProject = false;
+                        }
+                    } catch (error) {
+                        console.error(error);
+                    }
+                },
+                async getUserDonor() {
+                    try {
+                        const response = await axios.get(`${this.baseUrl}/users?limit=10&page=${this.pageDonor}&role=donor`, {
+                            headers: {
+                                Authorization: `Bearer ${localStorage.getItem('token')}`
+                            }
+                        });
+                        this.donorUsers = [...this.donorUsers, ...response.data.data.users]
+                        if (response.data.data.pagination.total_pages == this.page) {
+                            this.hasNextPageDonor = false
+                        } else {
+                            this.hasNextPageDonor = true;
+                        }
+                        this.pageDonor++;
+
+                    } catch (error) {
+                        console.error(error);
+                    }
+                },
+                async getUserRequester() {
+                    try {
+                        const response = await axios.get(`${this.baseUrl}/users?limit=10&page=${this.pageRequester}&role=requester`, {
+                            headers: {
+                                Authorization: `Bearer ${localStorage.getItem('token')}`
+                            }
+                        });
+                        this.requesterUsers = [...this.requesterUsers, ...response.data.data.users]
+                        if (response.data.data.pagination.total_pages == this.page) {
+                            this.hasNextPageRequester = false
+                        } else {
+                            this.hasNextPageRequester = true;
+                        }
+                        this.pageRequester++;
+
+                    } catch (error) {
+                        console.error(error);
+                    }
+                },
+                async getMe() {
+                    try {
+                        const response = await axios.get(`${this.baseUrl}/me`, {
+                            headers: {
+                                Authorization: `Bearer ${localStorage.getItem('token')}`
+                            }
+                        });
+                        localStorage.setItem('role', response.data.data.roles);
+                    } catch (error) {
+                        console.log('Not logged in')
+                        window.location.href = '/login.html?reason=user_not_logged_in';
+                        console.error(error)
+                    }
+                },
+                isAdmin() {
+                    return localStorage.getItem('role') === 'admin';
+                },
+                hasNextPageDonor: true,
+                hasNextPageRequester: true,
+                hasNextPageProject: false,
+                pageDonor: 1,
+                pageRequester: 1,
+                lastKeyProject: 1,
+                baseUrl: 'http://localhost:8180',
+                donorUsers: [],
+                requesterUsers: [],
+                projects: [],
+            }
+        }
+    </script>
+</body>
+
+</html>

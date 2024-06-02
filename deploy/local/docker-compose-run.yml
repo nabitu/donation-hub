@@ -32,7 +32,14 @@ services:
       - AWS_ACCESS_KEY_ID=awslocal
       - AWS_SECRET_ACCESS_KEY=awslocal
       - LOCALSTACK_ENDPOINT=http://localstack:4566
+      - AWS_USE_PATH_STYLE_ENDPOINT=1
+      - AWS_BUCKET=media-donation-hub
       - LOG_LEVEL=debug
+      - APP_PORT=8180
+      - DATABASE_DRIVER_NAME=mysql
+      - DATABASE_DATA_SOURCE=root:test1234@tcp(mysql:3306)/donation_hub
+    volumes:
+      - ../../:/go/src/github.com/isdzulqor/donation-hub
 
   mysql:
     image: mysql:8.3.0
@@ -44,3 +51,13 @@ services:
       - MYSQL_ROOT_PASSWORD=test1234
     volumes:
       - ../../docs/db:/docker-entrypoint-initdb.d
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - 8080:80
+    volumes:
+      - ../../cmd/web:/usr/share/nginx/html
+    depends_on:
+      server:
+        condition: service_started
