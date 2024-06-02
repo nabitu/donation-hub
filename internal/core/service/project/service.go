@@ -185,6 +185,10 @@ func (s *Storage) DonateToProject(ctx context.Context, input model.DonateToProje
 		return errors.New("ERR_PROJECT_NEED_REVIEW")
 	}
 
+	if p.Status != _type.PROJECT_APPROVED {
+		return errors.New("only project with status approved")
+	}
+
 	if err != nil {
 		return errors.New(fmt.Sprintf("failed to get project, err: %s", err.Error()))
 	}
