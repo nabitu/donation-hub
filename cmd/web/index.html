@@ -66,6 +66,11 @@
                                     <span x-text="formatNumber(project.target_amount)"></span>
                                     <span x-text="project.currency"></span>
                                 </p>
+                                <p>
+                                    <strong>Status:</strong>
+                                    <span class="badge" x-text="project.status" :class="{'badge-warning': project.status == 'need_review', 'badge-success': project.status == 'completed', 'badge-primary': project.status == 'approved'}"></span>
+
+                                </p>
                                 <!-- <p><strong>Collected:</strong> {{ project.collected }} ({{ project.percentCollected }}%)</p> -->
                                 <!-- View Details button -->
                                 <a href="#detail-page" class="btn btn-primary" @click="showDetailPage(project)" :class="{'btn-primary' : project.status != 'need_review', 'btn-warning': project.status == 'need_review'}">
@@ -156,9 +161,8 @@
                 </div>
             </template>
 
-
             <!-- Donation Form -->
-            <div x-show="isShowDonateForm" x-transition>
+            <div x-show="isShowDonateForm && selectedProject.status == 'approved'" x-transition>
                 <form @submit.prevent="SubmitDonate(selectedProject.id)" class="mt-2">
                     <div class="form-group">
                         <label for="amount">Amount</label>
@@ -403,6 +407,7 @@
                     }
 
                     await this.fetchProjectDonations(projectId)
+                    await this.fetchProjectById(projectId)
                 },
                 resetDonationForm() {
                     this.donateForm.amount = null;
