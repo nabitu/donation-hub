@@ -2,8 +2,9 @@ package rest
 
 import (
 	"fmt"
-	"github.com/isdzulqor/donation-hub/internal/core/service/auth"
 	"net/http"
+
+	"github.com/isdzulqor/donation-hub/internal/core/service/auth"
 
 	"github.com/isdzulqor/donation-hub/internal/core/service/project"
 	"github.com/isdzulqor/donation-hub/internal/core/service/user"
@@ -45,22 +46,33 @@ func StartApp(c Config) error {
 
 	handler := NewHandler(c.ProjectService, c.UserService)
 
+	corsMiddleware := func(next http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			// Add CORS headers here
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+			// Call the next handler
+			next(w, r)
+		}
+	}
 	// public routes
-	app.HandleFunc("GET /", handler.DefaultHandler)
-	app.HandleFunc("POST /users/register", handler.HandleRegister)
-	app.HandleFunc("POST /users/login", handler.HandleLogin)
-	app.HandleFunc("GET /users", handler.HandleUsers)
-	app.HandleFunc("GET /projects/{id}", handler.HandleProjectDetail)
-	app.HandleFunc("GET /projects/{id}/donations", handler.HandleProjectDonations)
+	app.HandleFunc("GET /", corsMiddleware(handler.DefaultHandler))
+	app.HandleFunc("POST /users/register", corsMiddleware(handler.HandleRegister))
+	app.HandleFunc("POST /users/login", corsMiddleware(handler.HandleLogin))
+	app.HandleFunc("GET /users", corsMiddleware(handler.HandleUsers))
+	app.HandleFunc("GET /projects/{id}", corsMiddleware(handler.HandleProjectDetail))
+	app.HandleFunc("GET /projects/{id}/donations", corsMiddleware(handler.HandleProjectDonations))
 
 	// optional token routes
-	app.HandleFunc("GET /projects", authTokenMiddleware(handler.HandleProjects, &c, true, []string{"admin", "requester", "donor"}))
+	app.HandleFunc("GET /projects", corsMiddleware(authTokenMiddleware(handler.HandleProjects, &c, true, []string{"admin", "requester", "donor"})))
 
 	// token required routes
-	app.HandleFunc("GET /projects/upload", authTokenMiddleware(handler.HandleRequestProjectUrl, &c, false, []string{"requester"}))
-	app.HandleFunc("PUT /projects/{id}/review", authTokenMiddleware(handler.HandleProjectReview, &c, false, []string{"admin"}))
-	app.HandleFunc("POST /projects", authTokenMiddleware(handler.HandleSubmitProject, &c, false, []string{"requester"}))
-	app.HandleFunc("POST /projects/{id}/donations", authTokenMiddleware(handler.HandleDonateProject, &c, false, []string{"donor"}))
+	app.HandleFunc("GET /projects/upload", corsMiddleware(authTokenMiddleware(handler.HandleRequestProjectUrl, &c, false, []string{"requester"})))
+	app.HandleFunc("PUT /projects/{id}/review", corsMiddleware(authTokenMiddleware(handler.HandleProjectReview, &c, false, []string{"admin"})))
+	app.HandleFunc("POST /projects", corsMiddleware(authTokenMiddleware(handler.HandleSubmitProject, &c, false, []string{"requester"})))
+	app.HandleFunc("POST /projects/{id}/donations", corsMiddleware(authTokenMiddleware(handler.HandleDonateProject, &c, false, []string{"donor"})))
 
 	appHandle := RecoverPanicMiddleware(app)
 
