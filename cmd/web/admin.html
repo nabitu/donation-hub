@@ -6,10 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <title>Registered Users</title>
+    <title>Admin Panel</title>
 </head>
 
 <body x-data="app()">
+
+
 
     <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -19,21 +21,28 @@
     </nav>
 
     <div class="container mt-4">
-        <template x-for="user in users">
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Username: <span x-text="user.username"></span></h5>
-                    <p class="card-text">Email: <span x-text="user.email"></span></p>
-                    <p class="card-text">Role: <span x-text="user.roles.join(', ')"></span></p>
-                </div>
-            </div>
-        </template>
-
-        <div x-show="!hasNextPage" class="alert alert-info" role="alert">
-            No more users to show.
+        <div id="admin-page">
+            <h1>Admin Dashboard</h1>
+            <h2>Donation Projects</h2>
+            <ul>
+                <li>Project Title 1 - Total Donations: $2500 (50%)</li>
+                <li>Project Title 2 - Total Donations: $0 (0%)</li>
+            </ul>
+            <h2>Donors</h2>
+            <ul>
+                <template x-for="user in donorUsers">
+                    <li x-text="user.username"></li>
+                </template>
+                <li x-show="hasNextPageDonor"><a href="" @click.prevent="loadMoreDonor">Load More</a></li>
+            </ul>
+            <h2>Requester</h2>
+            <ul>
+                <template x-for="user in requesterUsers">
+                    <li x-text="user.username"></li>
+                </template>
+                <li x-show="hasNextPageRequester"><a href="" @click.prevent="loadMoreRequester">Load More</a></li>
+            </ul>
         </div>
-        <button @click.prevent="loadMore()" x-show="hasNextPage" class="btn btn-primary">Load More</button>
-
     </div>
 
 
@@ -75,25 +84,51 @@
                         console.log('Not admin');
                         window.location.href = '/login.html';
                     }
-                    await this.getUsers();
+                    await this.getUserDonor();
+                    await this.getUserRequester();
                 },
-                loadMore() {
-                    this.getUsers();
+                loadMoreDonor() {
+                    this.getUserRequester();
                 },
-                async getUsers() {
+                loadMoreRequester() {
+                    this.getUserRequester();
+                },
+                async getProjects() {
+                    // todo get projects
+                },
+                async getUserDonor() {
                     try {
-                        const response = await axios.get(`${this.baseUrl}/users?limit=10&page=${this.page}`, {
+                        const response = await axios.get(`${this.baseUrl}/users?limit=10&page=${this.pageDonor}&role=donor`, {
                             headers: {
                                 Authorization: `Bearer ${localStorage.getItem('token')}`
                             }
                         });
-                        this.users = [...this.users, ...response.data.data.users]
+                        this.donorUsers = [...this.donorUsers, ...response.data.data.users]
                         if (response.data.data.pagination.total_pages == this.page) {
-                            this.hasNextPage = false
+                            this.hasNextPageDonor = false
                         } else {
-                            this.hasNextPage = true;
+                            this.hasNextPageDonor = true;
                         }
-                        this.page++;
+                        this.pageDonor++;
+
+                    } catch (error) {
+                        console.error(error);
+                    }
+                },
+                async getUserRequester() {
+                    try {
+                        const response = await axios.get(`${this.baseUrl}/users?limit=10&page=${this.pageRequester}&role=requester`, {
+                            headers: {
+                                Authorization: `Bearer ${localStorage.getItem('token')}`
+                            }
+                        });
+                        this.requesterUsers = [...this.requesterUsers, ...response.data.data.users]
+                        if (response.data.data.pagination.total_pages == this.page) {
+                            this.hasNextPageRequester = false
+                        } else {
+                            this.hasNextPageRequester = true;
+                        }
+                        this.pageRequester++;
 
                     } catch (error) {
                         console.error(error);
@@ -116,10 +151,13 @@
                 isAdmin() {
                     return localStorage.getItem('role') === 'admin';
                 },
-                hasNextPage: true,
-                page: 1,
+                hasNextPageDonor: true,
+                hasNextPageRequester: true,
+                pageDonor: 1,
+                pageRequester: 1,
                 baseUrl: 'http://localhost:8180',
-                users: []
+                donorUsers: [],
+                requesterUsers: [],
             }
         }
     </script>
