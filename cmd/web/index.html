@@ -23,7 +23,7 @@
     <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="#">DonationHub</a>
+            <a class="navbar-brand" href="/">DonationHub</a>
             <div x-show="admin">
                 <a class="btn btn-outline-light ml-auto" href="users.html">Registered User</a>
             </div>
@@ -36,247 +36,318 @@
         </div>
     </nav>
 
-    <!-- Content -->
-    <div class="container mt-4">
-        <!-- Home Page -->
-        <div id="home-page">
-            <h1>Welcome to DonationHub</h1>
-            <p>
-                DonationHub is a platform connecting donors with those in need. Explore our projects and make a
-                difference today.
-            </p>
-            <!-- Project Cards -->
-            <div id="project-cards" class="row">
-                <!-- Dummy projects (6 per page) -->
-                <!-- Loop through projects -->
-                <template x-for="project in projects" :key="project.id">
-                    <div class="col-md-4">
-                        <div class="card project-card">
-                            <div class="card-body">
-                                <h5 class="card-title" x-text="project.title"></h5>
-                                <p class="card-text" x-text="project.description"></p>
-                                <!-- Image slideshow -->
-                                <img :src="project.image_urls[0]" class="d-block w-100 mb-3" alt="Project Image">
-                                <!-- Donation details -->
-                                <p>
-                                    <strong>Amount Needed:</strong>
-                                    <span x-text="formatNumber(project.target_amount)"></span>
-                                    <span x-text="project.currency"></span>
-                                </p>
-                                <!-- <p><strong>Collected:</strong> {{ project.collected }} ({{ project.percentCollected }}%)</p> -->
-                                <!-- View Details button -->
-                                <a href="#detail-page" class="btn" :class="{'btn-warning': project.status === 'need_review', 'btn-primary':project.status != 'need_review' }" @click="showDetailPage(project)">
-                                    <span x-text="project.status == 'need_review' ? 'Review' : 'View Details'"></span>
-                                </a>
-
-                            </div>
+<!-- Content -->
+<div class="container mt-4">
+    <!-- Home Page -->
+    <div id="home-page" x-show="!showingDetailPage">
+        <h1>Welcome to DonationHub</h1>
+        <p>
+            DonationHub is a platform connecting donors with those in need. Explore our projects and make a
+            difference today.
+        </p>
+        <!-- Project Cards -->
+        <div id="project-cards" class="row">
+            <!-- Dummy projects (6 per page) -->
+            <!-- Loop through projects -->
+            <template x-for="project in projects" :key="project.id">
+                <div class="col-md-4">
+                    <div class="card project-card">
+                        <div class="card-body">
+                            <h5 class="card-title" x-text="project.title"></h5>
+                            <p class="card-text" x-text="project.description"></p>
+                            <!-- Image slideshow -->
+                            <img :src="project.image_urls[0]" class="d-block w-100 mb-3" alt="Project Image">
+                            <!-- Donation details -->
+                            <p>
+                                <strong>Amount Needed:</strong>
+                                <span x-text="formatNumber(project.target_amount)"></span>
+                                <span x-text="project.currency"></span>
+                            </p>
+                            <!-- <p><strong>Collected:</strong> {{ project.collected }} ({{ project.percentCollected }}%)</p> -->
+                            <!-- View Details button -->
+                            <a href="#detail-page" class="btn btn-primary" @click="showDetailPage(project)">View Details</a>
                         </div>
-                </template>
-                <!-- Add more project cards here -->
-            </div>
-            <!-- Load More button -->
-            <div class="text-center mt-4" x-show="lastKey">
-                <button id="load-more-btn" class="btn btn-secondary" @click.prevent="loadmore">Load More</button>
-            </div>
-        </div>
-
-        <!-- Detail Page -->
-        <div id="detail-page" style="display: none;">
-            <div class="row">
-                <!-- Image slideshow -->
-                <div class="col-md-6">
-                    <div id="image-slider" class="carousel slide" data-ride="carousel">
-                        <div class="carousel-inner">
-                            <div class="carousel-item active">
-                                <img src="https://via.placeholder.com/600x400" class="d-block w-100" alt="Slide 1">
-                            </div>
-                            <div class="carousel-item">
-                                <img src="https://via.placeholder.com/600x400" class="d-block w-100" alt="Slide 2">
-                            </div>
-                            <div class="carousel-item">
-                                <img src="https://via.placeholder.com/600x400" class="d-block w-100" alt="Slide 3">
-                            </div>
-                            <!-- Add more images here -->
-                        </div>
-                        <a class="carousel-control-prev" href="#image-slider" role="button" data-slide="prev">
-                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                            <span class="sr-only">Previous</span>
-                        </a>
-                        <a class="carousel-control-next" href="#image-slider" role="button" data-slide="next">
-                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                            <span class="sr-only">Next</span>
-                        </a>
                     </div>
                 </div>
-                <!-- Project description -->
-                <div class="col-md-6">
-                    <div class="project-description">
-                        <h1>Project Title 1</h1>
-                        <p>
-                            Project description: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut eget ligula
-                            auctor, rhoncus magna et, ullamcorper velit. Duis faucibus posuere nulla, vel mollis libero
-                            ultrices non. Curabitur ultricies justo id pulvinar consequat. Vivamus nec ultricies velit.
-                            Nullam eu elit leo. Phasellus feugiat odio in ipsum sollicitudin, sit amet tincidunt odio
-                            tempor. Fusce lobortis id odio non eleifend. Integer eleifend tortor vitae nisl tincidunt,
-                            eu hendrerit urna pulvinar.
-                        </p>
-                    </div>
-                </div>
-            </div>
-            <!-- Donation details -->
-            <p><strong>Amount Needed:</strong> $5000</p>
-            <p><strong>Collected:</strong> $2500 (50%)</p>
-            <!-- Donations and their messages -->
-            <h2>Donations</h2>
-            <ul>
-                <li>$50 - "Wish you all the best!" by @johndoe</li>
-                <li>$100 - "Great project!" by @alfonso</li>
-            </ul>
-            <button class="btn btn-success">Donate Now</button>
+            </template>
+            <!-- Add more project cards here -->
         </div>
-
-        <!-- Admin Page -->
-        <div id="admin-page" style="display: none;">
-            <h1>Admin Dashboard</h1>
-            <h2>Donation Projects</h2>
-            <ul>
-                <li>Project Title 1 - Total Donations: $2500 (50%)</li>
-                <li>Project Title 2 - Total Donations: $0 (0%)</li>
-            </ul>
-            <h2>Donors</h2>
-            <ul>
-                <li>Donor 1</li>
-                <li>Donor 2</li>
-            </ul>
-            <h2>Recipients</h2>
-            <ul>
-                <li>Recipient 1</li>
-                <li>Recipient 2</li>
-            </ul>
+        <!-- Load More button -->
+        <div class="text-center mt-4" x-show="lastKey">
+            <button id="load-more-btn" class="btn btn-secondary" @click.prevent="loadmore">Load More</button>
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="bg-dark text-white mt-5">
-        <div class="container py-4">
-            <div class="row">
-                <div class="col-md-6">
-                    <h5>DonationHub</h5>
-                    <p>A platform connecting donors with those in need.</p>
+
+
+    <!-- Detail Page -->
+    <div id="detail-page" x-show="showingDetailPage">
+        <div class="row">
+            <!-- Image slideshow -->
+            <div class="col-md-6">
+                <div id="image-slider" class="carousel slide" data-ride="carousel">
+                    <div class="carousel-inner">
+                        <template x-for="(image, index) in selectedProject.image_urls" :key="index">
+                            <div class="carousel-item" :class="{'active': index === 0}">
+                                <img :src="image" class="d-block w-100" alt="Project Image">
+                            </div>
+                        </template>
+                    </div>
+                    <a class="carousel-control-prev" href="#image-slider" role="button" data-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="sr-only">Previous</span>
+                    </a>
+                    <a class="carousel-control-next" href="#image-slider" role="button" data-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="sr-only">Next</span>
+                    </a>
                 </div>
-                <div class="col-md-6">
-                    <h5>Contact Us</h5>
-                    <ul>
-                        <li>Email: info@donationhub.com</li>
-                        <li>Phone: +1 123-456-7890</li>
-                    </ul>
+            </div>
+            <!-- Project description -->
+            <div class="col-md-6">
+                <div class="project-description">
+                    <h1 x-text="selectedProject.title"></h1>
+                    <p x-text="selectedProject.description"></p>
                 </div>
             </div>
         </div>
-        <div class="text-center py-2" style="background-color: #343a40;">
-            &copy; 2024 DonationHub. All rights reserved.
+        <!-- Donation details -->
+        <p><strong>Amount Needed:</strong> <span x-text="formatNumber(selectedProject.target_amount)"></span>  <span x-text="selectedProject.currency"></span></p>
+        <p><strong>Collected:</strong> <span x-text="formatNumber(selectedProject.collection_amount)"></span>  <span x-text="selectedProject.currency"></span></p>
+        <!-- Donations and their messages -->
+        <h2>Donations</h2>
+        <ul>
+            <template x-for="donation in selectedProjectDonations">
+                <li><span x-text="donation.amount"></span> <span x-text="donation.currency"></span> - <span x-text="donation.message"></span> by <span x-text="donation.donor.username"></span></li>
+            </template>
+        </ul>
+        <button class="btn btn-success" @click="isShowDonateForm = true">Donate Now</button>
+
+
+        <!-- Donation Form -->
+        <div x-show="isShowDonateForm" x-transition>
+            <form @submit.prevent="SubmitDonate(selectedProject.id)" class="mt-2">
+                <div class="form-group">
+                    <label for="amount">Amount</label>
+                    <input type="number" class="form-control" id="amount" x-model="donateForm.amount" required>
+                </div>
+                <div class="form-group">
+                    <label for="currency">Currency</label>
+                    <input type="text" class="form-control" id="currency" x-model="donateForm.currency" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="message">Message</label>
+                    <textarea class="form-control" id="message" rows="3" x-model="donateForm.message" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
         </div>
-    </footer>
+    </div>
 
-    <!-- Bootstrap JS and dependencies -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script defer>
-        function app() {
-            return {
-                async init() {
-                    console.log('Initializing app')
-                    await this.checkForToken()
-                    await this.getProjects()
-                    await this.getMe()
-                },
-                formatNumber(number) {
-                    return new Intl.NumberFormat().format(number)
-                },
-                async getProjects() {
-                    console.log('Getting projects')
-                    try {
-                        const token = localStorage.getItem('token');
-                        const headers = {};
-                        if (token) {
-                            headers['Authorization'] = `Bearer ${token}`;
-                        }
+    <!-- Admin Page -->
+    <div id="admin-page" style="display: none;">
+        <h1>Admin Dashboard</h1>
+        <h2>Donation Projects</h2>
+        <ul>
+            <li>Project Title 1 - Total Donations: $2500 (50%)</li>
+            <li>Project Title 2 - Total Donations: $0 (0%)</li>
+        </ul>
+        <h2>Donors</h2>
+        <ul>
+            <li>Donor 1</li>
+            <li>Donor 2</li>
+        </ul>
+        <h2>Recipients</h2>
+        <ul>
+            <li>Recipient 1</li>
+            <li>Recipient 2</li>
+        </ul>
+    </div>
+</div>
 
-                        const response = await axios.get(`${this.baseUrl}/projects?last_key=${this.lastKey}&limit=${this.limit}`, {headers});
-                        this.lastKey = response.data.data.last_key;
-                        this.projects = [...this.projects, ...response.data.data.projects];
-                    } catch (error) {
-                        console.log('Error getting projects')
-                        console.error(error);
-                    }
-                },
-                async logout() {
-                    console.log('Logging out')
-                    localStorage.removeItem('token')
-                    this.isAuthenticated = false
-                    this.admin = false
-                },
-                async checkForToken() {
-                    console.log('Checking for token')
-                    token = localStorage.getItem('token')
+<!-- Footer -->
+<footer class="bg-dark text-white mt-5">
+    <div class="container py-4">
+        <div class="row">
+            <div class="col-md-6">
+                <h5>DonationHub</h5>
+                <p>A platform connecting donors with those in need.</p>
+            </div>
+            <div class="col-md-6">
+                <h5>Contact Us</h5>
+                <ul>
+                    <li>Email: info@donationhub.com</li>
+                    <li>Phone: +1 123-456-7890</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="text-center py-2" style="background-color: #343a40;">
+        &copy; 2024 DonationHub. All rights reserved.
+    </div>
+</footer>
+
+<!-- Bootstrap JS and dependencies -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script defer>
+    function app() {
+        return {
+            async init() {
+                console.log('Initializing app')
+                await this.checkForToken()
+                await this.getProjects()
+                await this.getMe()
+            },
+            formatNumber(number) {
+                return new Intl.NumberFormat().format(number)
+            },
+            async getProjects() {
+                console.log('Getting projects')
+                try {
+                    const token = localStorage.getItem('token');
+                    const headers = {};
                     if (token) {
-                        console.log('Token found')
-                        this.isAuthenticated = true
-                        return true
+                        headers['Authorization'] = `Bearer ${token}`;
                     }
-                    return false;
-                },
-                async loadmore() {
-                    this.getProjects()
-                },
-                async getMe() {
+
+                    const response = await axios.get(`${this.baseUrl}/projects?last_key=${this.lastKey}&limit=9`, {headers});
+                    this.lastKey = response.data.data.last_key;
+                    this.projects = [...this.projects, ...response.data.data.projects];
+                } catch (error) {
+                    console.log('Error getting projects')
+                    console.error(error);
+                }
+            },
+            async logout() {
+                console.log('Logging out')
+                localStorage.removeItem('token')
+                this.isAuthenticated = false
+                this.admin = false
+            },
+            async checkForToken() {
+                console.log('Checking for token')
+                token = localStorage.getItem('token')
+                if (token) {
+                    console.log('Token found')
+                    this.isAuthenticated = true
+                    return true
+                }
+                return false;
+            },
+            async loadmore() {
+                this.getProjects()
+            },
+            async getMe() {
+                if (!localStorage.getItem('token')) {
+                    console.log('Not logged in, skipping getMe')
+                    return;
+                }
+                try {
+
+                    console.log('Getting user')
                     if (!localStorage.getItem('token')) {
-                        console.log('Not logged in, skipping getMe')
-                        return;
+                        console.log('No token found, skipping user check')
                     }
-                    try {
 
-                        console.log('Getting user')
-                        if (!localStorage.getItem('token')) {
-                            console.log('No token found, skipping user check')
+                    const response = await axios.get(`${this.baseUrl}/me`, {
+                        headers: {
+                            Authorization: `Bearer ${localStorage.getItem('token')}`
                         }
+                    });
+                    console.log('User is authenticated', response.data.data.roles)
+                    localStorage.setItem('role', response.data.data.roles);
+                    await this.isAdmin()
+                } catch (error) {
+                    console.error('Error getting user')
+                    console.error(error)
+                }
 
-                        const response = await axios.get(`${this.baseUrl}/me`, {
-                            headers: {
-                                Authorization: `Bearer ${localStorage.getItem('token')}`
-                            }
-                        });
-                        console.log('User is authenticated', response.data.data.roles)
-                        localStorage.setItem('role', response.data.data.roles);
-                        await this.isAdmin()
-                    } catch (error) {
-                        console.error('Error getting user')
-                        console.error(error)
-                    }
+            },
+            async isAdmin() {
+                console.log('Checking if user is admin')
+                const role = localStorage.getItem('role');
+                if (role === 'admin') {
+                    console.log('User is admin')
+                    this.admin = true
+                    return true
+                }
+            },
+            async fetchProjectById(projectId) {
+                try {
+                    const response = await axios.get(`${this.baseUrl}/projects/${projectId}`, {
+                        headers: {
+                            Authorization: `Bearer ${localStorage.getItem('token')}`
+                        }
+                    });
+                    console.log(response.data.data)
+                    this.selectedProject = response.data.data
+                } catch (error) {
+                    console.log(error)
+                }
+            },
+            async fetchProjectDonations(projectId) {
+                try {
+                    const response = await axios.get(`${this.baseUrl}/projects/${projectId}/donations?limit=1000`, {
+                        headers: {
+                            Authorization: `Bearer ${localStorage.getItem('token')}`
+                        }
+                    });
+                    this.selectedProjectDonations = response.data.data.donations
+                } catch (error) {
+                    console.log(error)
+                }
+            },
+            async SubmitDonate(projectId) {
+                try {
+                    const response = await axios.post(`${this.baseUrl}/projects/${projectId}/donations`, {
+                        "amount": parseInt(this.donateForm.amount),
+                        "currency": this.donateForm.currency,
+                        "message": this.donateForm.message,
+                    }, {
+                        headers: {
+                            Authorization: `Bearer ${localStorage.getItem('token')}`
+                        }
+                    });
+                    this.resetDonationForm()
+                } catch (error) {
+                    console.log(error)
+                }
 
-                },
-                async isAdmin() {
-                    console.log('Checking if user is admin')
-                    const role = localStorage.getItem('role');
-                    if (role === 'admin') {
-                        console.log('User is admin')
-                        this.admin = true
-                        return true
-                    }
-                },
-                limit: 6,
-                admin: false,
-                lastKey: null,
-                baseUrl: 'http://localhost:8180',
-                isLoading: false,
-                isAuthenticated: false,
-                projects: [],
-            }
+                await this.fetchProjectDonations(projectId)
+            },
+            resetDonationForm() {
+              this.donateForm.amount = null;
+              this.donateForm.message = "";
+            },
+            showDetailPage(project) {
+                this.isShowDonateForm = false;
+                this.donateForm.currency = project.currency;
+                this.fetchProjectById(project.id);
+                this.fetchProjectDonations(project.id);
+                this.showingDetailPage = true;
+            },
+            admin: false,
+            lastKey: null,
+            baseUrl: 'http://localhost:8180',
+            isLoading: false,
+            isAuthenticated: false,
+            projects: [],
+            showingDetailPage: false,
+            selectedProject: {},
+            selectedProjectDonations: [],
+            isShowDonateForm: false,
+            donateForm: {
+                amount: null,
+                currency: "",
+                message: ""
+            },
         }
-    </script>
+    }
+</script>
 </body>
 
 </html>
