@@ -194,13 +194,29 @@ func (s *Storage) DonateToProject(ctx context.Context, input model.DonateToProje
 		return errors.New(fmt.Sprintf("failed to get project, err: %s", err.Error()))
 	}
 
-	if float64(input.Amount) > p.TargetAmount {
+	if float64(input.Amount+int64(p.CollectionAmount)) > p.TargetAmount {
 		return errors.New("ERR_TOO_MUCH_DONATION")
 	}
 
 	err = s.storage.DonateToProject(ctx, input)
 	if err != nil {
 		return errors.New(fmt.Sprintf("failed to donate to project, err: %s", err.Error()))
+	}
+
+	p, err = s.storage.GetProjectById(ctx, model.GetProjectByIdInput{ProjectId: input.ProjectId})
+	if err != nil {
+		return errors.New(fmt.Sprintf("failed to get project, err: %s", err.Error()))
+	}
+
+	if p.CollectionAmount >= p.TargetAmount {
+		err = s.storage.ReviewByAdmin(ctx, model.ReviewProjectByAdminInput{
+			ProjectId: input.ProjectId,
+			Status:    _type.PROJECT_COMPLETEd,
+			UserID:    input.UserID,
+		})
+		if err != nil {
+			return errors.New(fmt.Sprintf("failed to review project, err: %s", err.Error()))
+		}
 	}
 
 	return nil

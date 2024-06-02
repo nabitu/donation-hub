@@ -127,13 +127,32 @@
                     <li><span x-text="donation.amount"></span> <span x-text="donation.currency"></span> - <span x-text="donation.message"></span> by <span x-text="donation.donor.username"></span></li>
                 </template>
             </ul>
-            <template x-if="!admin">
-                <button class="btn btn-success" @click="isShowDonateForm = true">Donate Now</button>
+
+            <template x-show="errorDonation">
+                <div class="alert alert-danger">
+                    <p x-text="errorDonation"></p>
+                </div>
+            </template>
+
+            <template x-if="!admin && selectedProject.status == 'approved'">
+                <button class=" btn btn-success" @click="isShowDonateForm = true">Donate Now</button>
             </template>
             <template x-if="admin && selectedProject.status == 'need_review'">
                 <div>
                     <button class="btn btn-success" @click="approveProject">Approve</button>
                     <button class="btn btn-danger" @click="rejectProject">Reject</button>
+                </div>
+            </template>
+
+            <template x-if="selectedProject.status == 'rejected'">
+                <div class="alert alert-danger">
+                    <p>Project has been rejected</p>
+                </div>
+            </template>
+
+            <template x-if="selectedProject.status == 'completed'">
+                <div class="alert alert-success">
+                    <p>Project has been completed</p>
                 </div>
             </template>
 
@@ -374,6 +393,12 @@
                         });
                         this.resetDonationForm()
                     } catch (error) {
+                        console.log(error.response.data.msg)
+                        if (error.response.data.msg == "ERR_TOO_MUCH_DONATION") {
+                            this.errorDonation = "You have donated too much"
+                        } else {
+                            this.errorDonation = "Error donating"
+                        }
                         console.log(error)
                     }
 
@@ -390,6 +415,7 @@
                     this.fetchProjectDonations(project.id);
                     this.showingDetailPage = true;
                 },
+                errorDonation: false,
                 admin: false,
                 requester: false,
                 lastKey: null,
