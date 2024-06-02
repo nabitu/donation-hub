@@ -62,10 +62,9 @@ func authTokenMiddleware(next http.HandlerFunc, c *Config, isOptional bool, role
 			next.ServeHTTP(w, r.WithContext(ctx))
 		} else {
 			ResponseErrorForbiddenAccess(w, "user doesn't have enough authorization")
-			return
 		}
 
-		next.ServeHTTP(w, r.WithContext(ctx))
+		return
 	}
 }
 
