@@ -24,7 +24,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" href="#">DonationHub</a>
-            <div x-show="isAdmin">
+            <div x-show="admin">
                 <a class="btn btn-outline-light ml-auto" href="users.html">Registered User</a>
             </div>
             <div x-show="isAuthenticated">
@@ -203,7 +203,7 @@
                             headers['Authorization'] = `Bearer ${token}`;
                         }
 
-                        const response = await axios.get(`${this.baseUrl}/projects?last_key=${this.lastKey}`, {headers});
+                        const response = await axios.get(`${this.baseUrl}/projects?last_key=${this.lastKey}&limit=9`, {headers});
                         this.lastKey = response.data.data.last_key;
                         this.projects = [...this.projects, ...response.data.data.projects];
                     } catch (error) {
@@ -215,6 +215,7 @@
                     console.log('Logging out')
                     localStorage.removeItem('token')
                     this.isAuthenticated = false
+                    this.admin = false
                 },
                 async checkForToken() {
                     console.log('Checking for token')
@@ -230,6 +231,10 @@
                     this.getProjects()
                 },
                 async getMe() {
+                    if (!localStorage.getItem('token')) {
+                        console.log('Not logged in, skipping getMe')
+                        return;
+                    }
                     try {
 
                         console.log('Getting user')

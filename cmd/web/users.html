@@ -73,7 +73,7 @@
                         console.log('Admin');
                     } else {
                         console.log('Not admin');
-                        // window.location.href = '/login.html';
+                        window.location.href = '/login.html';
                     }
                     await this.getUsers();
                 },
@@ -108,6 +108,8 @@
                         });
                         localStorage.setItem('role', response.data.data.roles);
                     } catch (error) {
+                        console.log('Not logged in')
+                        window.location.href = '/login.html?reason=user_not_logged_in';
                         console.error(error)
                     }
                 },
