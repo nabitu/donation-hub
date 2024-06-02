@@ -22,6 +22,9 @@
     <!-- Content -->
     <div class="container mt-4">
         <h2>Create New Project</h2>
+        <div x-show="projectCreated" class="alert alert-success" role="alert">
+            Project created successfully. Your project will be review by admin.
+        </div>
         <form @submit.prevent="submitProject">
             <div class="form-group">
                 <label for="projectName">Project Name</label>
@@ -96,8 +99,8 @@
             return {
                 async init() {
                     await this.getMe()
-                    // make sure user role is requester
-                    // todo : check user role
+                    const urlParams = new URLSearchParams(window.location.search);
+                    this.projectCreated = urlParams.get('create') === 'success';
                 },
                 async submitProject() {
                     var data = this.form;
@@ -113,7 +116,7 @@
                             }
                         });
                         console.log(response.data)
-                        window.location.href = '/index.html?reason=project_created_successfully'
+                        window.location.href = '/upload.html?create=success'
                     } catch (error) {
                         console.error('Error creating project')
                         console.error(error)
@@ -191,6 +194,7 @@
                         xhr.send(file);
                     });
                 },
+                projectCreated: false,
                 mime: '',
                 filesize: 0,
                 baseUrl: 'http://localhost:8180',
@@ -199,7 +203,7 @@
                     description: '',
                     due_at: '',
                     target_amount: '',
-                    currency: '',
+                    currency: 'USD',
                     image_urls: [
                         "https://via.placeholder.com/150x150?text=image1",
                         "https://via.placeholder.com/150x150?text=image2",

@@ -226,7 +226,7 @@ func (h *Handler) HandleProjectDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if modelProject.Status == _type.PROJECT_NEED_REVIEW {
+	if modelProject.Status == _type.PROJECT_NEED_REVIEW && r.Context().Value("isAdmin") == false {
 		ResponseErrorNotFound(w, "project not found")
 		return
 	}

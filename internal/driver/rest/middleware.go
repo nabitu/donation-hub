@@ -25,6 +25,8 @@ func authTokenMiddleware(next http.HandlerFunc, c *Config, isOptional bool, role
 	return func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		ctx := context.WithValue(r.Context(), "withAuth", false)
+		// default is admin = false
+		ctx = context.WithValue(ctx, "isAdmin", false)
 
 		// if route authorization is optional
 		if isOptional && authHeader == "" {
@@ -59,6 +61,13 @@ func authTokenMiddleware(next http.HandlerFunc, c *Config, isOptional bool, role
 		ctx = context.WithValue(ctx, "auth_username", payload.Username)
 		ctx = context.WithValue(ctx, "auth_email", payload.Email)
 		ctx = context.WithValue(ctx, "auth_roles", payload.Role)
+		// is admin
+		for _, role := range payload.Role {
+			if role == "admin" {
+				ctx = context.WithValue(ctx, "isAdmin", true)
+				break
+			}
+		}
 
 		if len(roles) > 0 && validRole(roles, payload.Role) {
 			next.ServeHTTP(w, r.WithContext(ctx))
