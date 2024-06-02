@@ -2,9 +2,8 @@ package model
 
 import (
 	"errors"
-	"github.com/isdzulqor/donation-hub/internal/utill/validator"
-
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/isdzulqor/donation-hub/internal/utill/validator"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -66,9 +65,13 @@ type UserLoginOutput struct {
 }
 
 type ListUserInput struct {
-	Limit int64  `json:"limit"`
-	Page  int64  `json:"page"`
-	Role  string `json:"role"`
+	Limit int64  `json:"limit" validate:"omitempty,min=1"`
+	Page  int64  `json:"page" validate:"omitempty,min=1"`
+	Role  string `json:"role" validate:"omitempty,oneof=donor requester"`
+}
+
+func (s ListUserInput) Validate() error {
+	return validator.Validate().Struct(s)
 }
 
 // UserStorage raw data user from database

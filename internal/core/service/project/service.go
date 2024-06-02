@@ -72,7 +72,11 @@ func (s *Storage) RequestUploadUrl(ctx context.Context, input model.RequestUploa
 }
 
 func (s *Storage) SubmitProject(ctx context.Context, input model.SubmitProjectInput) (*model.SubmitProjectOutput, error) {
-	input.Validate()
+	err := input.Validate()
+	if err != nil {
+		return nil, err
+	}
+
 	// validate user, make sure role is valid
 	ok, err := s.userDataStorage.UserHasRole(ctx, input.UserID, _type.ROLE_REQUESTER)
 	if !ok || err != nil {
