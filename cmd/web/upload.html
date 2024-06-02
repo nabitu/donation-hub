@@ -100,14 +100,20 @@
                     // todo : check user role
                 },
                 async submitProject() {
+                    var data = this.form;
+                    // convert due at to unix timestamp
+                    data.due_at = new Date(data.due_at).getTime() / 1000;
+                    // target amount should be a number
+                    data.target_amount = parseFloat(data.target_amount);
+
                     try {
-                        const response = await axios.post(`${this.baseUrl}/projects`, this.form, {
+                        const response = await axios.post(`${this.baseUrl}/projects`, data, {
                             headers: {
                                 Authorization: `Bearer ${localStorage.getItem('token')}`
                             }
                         });
                         console.log(response.data)
-                        window.location.href = '/projects.html'
+                        window.location.href = '/index.html?reason=project_created_successfully'
                     } catch (error) {
                         console.error('Error creating project')
                         console.error(error)
