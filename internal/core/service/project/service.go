@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/isdzulqor/donation-hub/internal/utill/role"
 	"log"
+
+	"github.com/isdzulqor/donation-hub/internal/utill/role"
 
 	"github.com/isdzulqor/donation-hub/internal/core/model"
 	"github.com/isdzulqor/donation-hub/internal/core/service/user"
@@ -214,7 +215,7 @@ func (s *Storage) ListDonationByProjectId(ctx context.Context, input model.ListP
 	}
 
 	// jika status project masih need_review, maka tidak bisa donate
-	if p.Status == _type.PROJECT_NEED_REVIEW {
+	if p.Status == _type.PROJECT_NEED_REVIEW && ctx.Value("isAdmin") == false {
 		return nil, errors.New("ERR_PROJECT_NEED_REVIEW")
 	}
 
