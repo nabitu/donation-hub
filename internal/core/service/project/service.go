@@ -4,6 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
+
+	"github.com/isdzulqor/donation-hub/internal/utill/role"
+
 	"github.com/isdzulqor/donation-hub/internal/core/model"
 	"github.com/isdzulqor/donation-hub/internal/core/service/user"
 	_type "github.com/isdzulqor/donation-hub/internal/core/type"
@@ -51,7 +55,7 @@ func (s *Storage) RequestUploadUrl(ctx context.Context, input model.RequestUploa
 
 	// validate mimetype
 	if input.MimeType != "image/jpeg" && input.MimeType != "image/png" {
-		return nil, errors.New("mimetype must be image/jpg or image/png")
+		return nil, errors.New("mimetype must be image/jpeg or image/png")
 	}
 
 	r, err := s.fileStorage.RequestUploadUrl(input.MimeType, input.FileSize)
@@ -69,10 +73,21 @@ func (s *Storage) RequestUploadUrl(ctx context.Context, input model.RequestUploa
 }
 
 func (s *Storage) SubmitProject(ctx context.Context, input model.SubmitProjectInput) (*model.SubmitProjectOutput, error) {
+	err := input.Validate()
+	if err != nil {
+		return nil, err
+	}
+
 	// validate user, make sure role is valid
 	ok, err := s.userDataStorage.UserHasRole(ctx, input.UserID, _type.ROLE_REQUESTER)
 	if !ok || err != nil {
 		return nil, errors.New("ERR_FORBIDDEN_ACCESS")
+	}
+
+	ok, err = s.storage.HasName(ctx, input.Title)
+	if ok || err != nil {
+		log.Println(err)
+		return nil, errors.New("project name already exist")
 	}
 
 	// save to database
@@ -95,13 +110,22 @@ func (s *Storage) SubmitProject(ctx context.Context, input model.SubmitProjectIn
 
 func (s *Storage) ReviewProjectByAdmin(ctx context.Context, input model.ReviewProjectByAdminInput) error {
 	// validate user, make sure role is valid
-	ok, err := s.userDataStorage.UserHasRole(ctx, input.UserID, _type.ROLE_REQUESTER)
+	ok, err := s.userDataStorage.UserHasRole(ctx, input.UserID, _type.ROLE_ADMIN)
 	if !ok || err != nil {
 		return errors.New("ERR_FORBIDDEN_ACCESS")
 	}
 
 	if input.Status != _type.PROJECT_APPROVED && input.Status != _type.PROJECT_REJECTED {
 		return errors.New("status must be approved or rejected")
+	}
+
+	// jika status project bukan need_review maka tidak bisa review
+	p, err := s.storage.GetProjectById(ctx, model.GetProjectByIdInput{ProjectId: input.ProjectId})
+	if err != nil {
+		return errors.New(fmt.Sprintf("failed to get project, err: %s", err.Error()))
+	}
+	if p.Status != _type.PROJECT_NEED_REVIEW {
+		return errors.New("ERR_PROJECT_NOT_NEED_REVIEW")
 	}
 
 	err = s.storage.ReviewByAdmin(ctx, input)
@@ -113,10 +137,10 @@ func (s *Storage) ReviewProjectByAdmin(ctx context.Context, input model.ReviewPr
 }
 
 func (s *Storage) ListProject(ctx context.Context, input model.ListProjectInput) (*model.ListProjectOutput, error) {
+	input.IsAdmin = role.HasRoleFromContext(ctx, _type.ROLE_ADMIN)
 	// make sure user has role admin if status need_review
 	if input.Status == _type.PROJECT_NEED_REVIEW {
-		ok, err := s.userDataStorage.UserHasRole(ctx, input.UserID, _type.ROLE_ADMIN)
-		if !ok || err != nil {
+		if !input.IsAdmin {
 			return nil, errors.New("ERR_FORBIDDEN_ACCESS")
 		}
 	}
@@ -144,6 +168,11 @@ func (s *Storage) GetProjectById(ctx context.Context, input model.GetProjectById
 }
 
 func (s *Storage) DonateToProject(ctx context.Context, input model.DonateToProjectInput) error {
+	// validate donations
+	if err := input.Validate(); err != nil {
+		return errors.New(fmt.Sprintf("failed to validate donation, err: %s", err.Error()))
+	}
+
 	// make sure user has role donor
 	ok, err := s.userDataStorage.UserHasRole(ctx, input.UserID, _type.ROLE_DONOR)
 	if !ok || err != nil {
@@ -152,11 +181,20 @@ func (s *Storage) DonateToProject(ctx context.Context, input model.DonateToProje
 
 	p, err := s.storage.GetProjectById(ctx, model.GetProjectByIdInput{ProjectId: input.ProjectId})
 
+	// jika status project masih need_review, maka tidak bisa donate
+	if p.Status == _type.PROJECT_NEED_REVIEW {
+		return errors.New("ERR_PROJECT_NEED_REVIEW")
+	}
+
+	if p.Status != _type.PROJECT_APPROVED {
+		return errors.New("only project with status approved")
+	}
+
 	if err != nil {
 		return errors.New(fmt.Sprintf("failed to get project, err: %s", err.Error()))
 	}
 
-	if float64(input.Amount) > p.TargetAmount || float64(input.Amount) > p.CollectionAmount {
+	if float64(input.Amount+int64(p.CollectionAmount)) > p.TargetAmount {
 		return errors.New("ERR_TOO_MUCH_DONATION")
 	}
 
@@ -165,10 +203,38 @@ func (s *Storage) DonateToProject(ctx context.Context, input model.DonateToProje
 		return errors.New(fmt.Sprintf("failed to donate to project, err: %s", err.Error()))
 	}
 
+	p, err = s.storage.GetProjectById(ctx, model.GetProjectByIdInput{ProjectId: input.ProjectId})
+	if err != nil {
+		return errors.New(fmt.Sprintf("failed to get project, err: %s", err.Error()))
+	}
+
+	if p.CollectionAmount >= p.TargetAmount {
+		err = s.storage.ReviewByAdmin(ctx, model.ReviewProjectByAdminInput{
+			ProjectId: input.ProjectId,
+			Status:    _type.PROJECT_COMPLETEd,
+			UserID:    input.UserID,
+		})
+		if err != nil {
+			return errors.New(fmt.Sprintf("failed to review project, err: %s", err.Error()))
+		}
+	}
+
 	return nil
 }
 
 func (s *Storage) ListDonationByProjectId(ctx context.Context, input model.ListProjectDonationInput) (*model.ListProjectDonationOutput, error) {
+
+	p, err := s.storage.GetProjectById(ctx, model.GetProjectByIdInput{ProjectId: input.ProjectId})
+
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("failed to get project, err: %s", err.Error()))
+	}
+
+	// jika status project masih need_review, maka tidak bisa donate
+	if p.Status == _type.PROJECT_NEED_REVIEW && ctx.Value("isAdmin") == false {
+		return nil, errors.New("ERR_PROJECT_NEED_REVIEW")
+	}
+
 	output, err := s.storage.ListDonationByProjectId(ctx, input)
 
 	if err != nil {

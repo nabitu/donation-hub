@@ -15,9 +15,10 @@ type service struct {
 }
 
 type MyCustomClaims struct {
-	UserID   string `json:"user_id"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
+	UserID   string   `json:"user_id"`
+	Username string   `json:"username"`
+	Email    string   `json:"email"`
+	Role     []string `json:"role"`
 	jwt.RegisteredClaims
 }
 
@@ -27,6 +28,7 @@ func (s service) GenerateToken(i model.AuthPayload) (token string, err error) {
 		UserID:   userIDStr,
 		Username: i.Username,
 		Email:    i.Email,
+		Role:     i.Role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
 			Issuer:    s.container.Config.TokenIssuer,
@@ -60,7 +62,7 @@ func (s service) ValidateToken(tokenString string) (*model.AuthPayload, error) {
 
 	claims, ok := token.Claims.(*MyCustomClaims)
 	if ok && token.Valid {
-		fmt.Println("id:"+claims.UserID, "username:"+claims.Username, "email:"+claims.Email)
+		fmt.Println("id:"+claims.UserID, "username:"+claims.Username, "email:"+claims.Email, "role:"+claims.Role[0])
 		id, err := strconv.Atoi(claims.UserID)
 		if err != nil {
 			return nil, err
@@ -70,6 +72,7 @@ func (s service) ValidateToken(tokenString string) (*model.AuthPayload, error) {
 			UserID:   int64(id),
 			Username: claims.Username,
 			Email:    claims.Email,
+			Role:     claims.Role,
 		}, nil
 	}
 

@@ -3,14 +3,16 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
+	"os"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/isdzulqor/donation-hub/internal/core/model"
 	"github.com/jmoiron/sqlx"
-	"log"
-	"os"
 )
 
 func InitContainer() *model.Container {
