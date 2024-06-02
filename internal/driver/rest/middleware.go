@@ -39,7 +39,9 @@ func authTokenMiddleware(next http.HandlerFunc, c *Config, isOptional bool, role
 		}
 
 		token, err := getToken(authHeader)
+		// if header Authorization: Bearer preset with empty token
 		if err != nil {
+			ResponseErrorInvalidAccessToken(w, "invalid access token")
 			return
 		}
 
