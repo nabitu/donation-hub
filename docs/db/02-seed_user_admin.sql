@@ -20,14 +20,55 @@ VALUES
 
 INSERT INTO `project_images` (`id`, `project_id`, `url`)
 VALUES
-(1, 1, 'https://via.placeholder.com/150'),
-(2, 2, 'https://via.placeholder.com/150'),
-(3, 3, 'https://via.placeholder.com/150'),
-(4, 4, 'https://via.placeholder.com/150');
+(1, 1, 'https://dummyimage.com/600x400/000/fff&text=Project+1'),
+(2, 2, 'https://dummyimage.com/600x400/000/fff&text=Project+2'),
+(3, 3, 'https://dummyimage.com/600x400/000/fff&text=Project+3'),
+(4, 4, 'https://dummyimage.com/600x400/000/fff&text=Project+4');
 
--- insert donation only on approved project
-INSERT INTO `donations` (`id`, `project_id`, `donor_id`, `message`, `amount`, `currency`, `created_at`)
+-- Generate 20 sample projects about animals feeding
+INSERT INTO `projects` (`id`, `name`, `description`, `target_amount`, `collection_amount`, `currency`, `status`, `requester_id`, `due_at`, `created_at`, `updated_at`)
 VALUES
-(1, 2, 2, 'Donation 1', 1000, 'IDR', UNIX_TIMESTAMP()),
-(2, 2, 2, 'Donation 2', 1000, 'IDR', UNIX_TIMESTAMP()),
-(3, 2, 2, 'Donation 3', 1000, 'IDR', UNIX_TIMESTAMP());
+(5, 'Feeding Lions', 'Feeding lions in the zoo', 500, 0, 'USD', 'approved', 3, UNIX_TIMESTAMP(), UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(6, 'Feeding Elephants', 'Feeding elephants in the sanctuary', 800, 0, 'USD', 'approved', 3, UNIX_TIMESTAMP(), UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(7, 'Feeding Tigers', 'Feeding tigers in the wildlife reserve', 700, 0, 'USD', 'approved', 3, UNIX_TIMESTAMP(), UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(8, 'Feeding Giraffes', 'Feeding giraffes in the safari park', 600, 0, 'USD', 'approved', 3, UNIX_TIMESTAMP(), UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(9, 'Feeding Penguins', 'Feeding penguins in the aquarium', 400, 0, 'USD', 'approved', 3, UNIX_TIMESTAMP(), UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(10, 'Feeding Dolphins', 'Feeding dolphins in the marine park', 900, 0, 'USD', 'approved', 3, UNIX_TIMESTAMP(), UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(11, 'Feeding Koalas', 'Feeding koalas in the wildlife sanctuary', 300, 0, 'USD', 'approved', 3, UNIX_TIMESTAMP(), UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(12, 'Feeding Gorillas', 'Feeding gorillas in the zoo', 400, 0, 'USD', 'approved', 3, UNIX_TIMESTAMP(), UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(13, 'Feeding Zebras', 'Feeding zebras in the safari park', 600, 0, 'USD', 'approved', 3, UNIX_TIMESTAMP(), UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(14, 'Feeding Kangaroos', 'Feeding kangaroos in the wildlife reserve', 500, 0, 'USD', 'approved', 3, UNIX_TIMESTAMP(), UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(15, 'Feeding Bears', 'Feeding bears in the wildlife sanctuary', 700, 0, 'USD', 'approved', 3, UNIX_TIMESTAMP(), UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(16, 'Feeding Monkeys', 'Feeding monkeys in the zoo', 400, 0, 'USD', 'approved', 3, UNIX_TIMESTAMP(), UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(17, 'Feeding Macan', 'Feeding macan in the zoo', 500, 0, 'USD', 'approved', 3, UNIX_TIMESTAMP(), UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(18, 'Feeding Lumba Lumba', 'Feeding Lumba Lumba in the zoo', 800, 0, 'USD', 'approved', 3, UNIX_TIMESTAMP(), UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(19, 'Feeding Koala', 'Feeding Koala in the zoo', 300, 0, 'USD', 'approved', 3, UNIX_TIMESTAMP(), UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(20, 'Feeding Munyuk', 'Feeding Munyuk in the company', 400, 0, 'USD', 'approved', 3, UNIX_TIMESTAMP(), UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(21, 'Feeding zebra', 'Feeding zebra in the zoo', 600, 0, 'USD', 'approved', 3, UNIX_TIMESTAMP(), UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(22, 'Feeding kang guru', 'Feeding kang guru in the zoo', 500, 0, 'USD', 'approved', 3, UNIX_TIMESTAMP(), UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(23, 'Feeding ber uang', 'Feeding ber uang in the zoo', 700, 0, 'USD', 'approved', 3, UNIX_TIMESTAMP(), UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(24, 'Feeding uu aak', 'Feeding uu aak in the company', 400, 0, 'USD', 'approved', 3, UNIX_TIMESTAMP(), UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
+
+--  generate sample project image for animals
+INSERT INTO `project_images` (`id`, `project_id`, `url`)
+VALUES
+(5, 5, 'https://dummyimage.com/600x400/000/fff&text=Feeding+Lions'),
+(6, 6, 'https://dummyimage.com/600x400/000/fff&text=Feeding+Elephants'),
+(7, 7, 'https://dummyimage.com/600x400/000/fff&text=Feeding+Tigers'),
+(8, 8, 'https://dummyimage.com/600x400/000/fff&text=Feeding+Giraffes'),
+(9, 9, 'https://dummyimage.com/600x400/000/fff&text=Feeding+Penguins'),
+(10, 10, 'https://dummyimage.com/600x400/000/fff&text=Feeding+Dolphins'),
+(11, 11, 'https://dummyimage.com/600x400/000/fff&text=Feeding+Koalas'),
+(12, 12, 'https://dummyimage.com/600x400/000/fff&text=Feeding+Gorillas'),
+(13, 13, 'https://dummyimage.com/600x400/000/fff&text=Feeding+Zebras'),
+(14, 14, 'https://dummyimage.com/600x400/000/fff&text=Feeding+Kangaroos'),
+(15, 15, 'https://dummyimage.com/600x400/000/fff&text=Feeding+Bears'),
+(16, 16, 'https://dummyimage.com/600x400/000/fff&text=Feeding+Monkeys'),
+(17, 17, 'https://dummyimage.com/600x400/000/fff&text=Feeding+Penguins'),
+(18, 18, 'https://dummyimage.com/600x400/000/fff&text=Feeding+Dolphins'),
+(19, 19, 'https://dummyimage.com/600x400/000/fff&text=Feeding+Koalas'),
+(20, 20, 'https://dummyimage.com/600x400/000/fff&text=Feeding+Gorillas'),
+(21, 21, 'https://dummyimage.com/600x400/000/fff&text=Feeding+zebra'),
+(22, 22, 'https://dummyimage.com/600x400/000/fff&text=Feeding+kangaroo'),
+(23, 23, 'https://dummyimage.com/600x400/000/fff&text=Feeding+bear'),
+(24, 24, 'https://dummyimage.com/600x400/000/fff&text=Feeding+monkey');

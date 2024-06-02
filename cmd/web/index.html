@@ -45,22 +45,24 @@
             <!-- Project Cards -->
             <div id="project-cards" class="row">
                 <!-- Dummy projects (6 per page) -->
-                <div class="col-md-4">
-                    <div class="card project-card">
-                        <div class="card-body">
-                            <h5 class="card-title">Project Title 1</h5>
-                            <p class="card-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut eget ligula
-                                auctor, rhoncus magna et, ullamcorper velit.</p>
-                            <!-- Image slideshow -->
-                            <img src="https://via.placeholder.com/600x400" class="d-block w-100 mb-3" alt="Project Image">
-                            <!-- Donation details -->
-                            <p><strong>Amount Needed:</strong> $5000</p>
-                            <p><strong>Collected:</strong> $2500 (50%)</p>
-                            <!-- View Details button -->
-                            <a href="#detail-page" class="btn btn-primary" onclick="showDetailPage()">View Details</a>
+                <!-- Loop through projects -->
+                <template x-for="project in projects" :key="project.id">
+                    <div class="col-md-4">
+                        <div class="card project-card">
+                            <div class="card-body">
+                                <h5 class="card-title" x-text="project.title"></h5>
+                                <p class="card-text" x-text="project.description"></p>
+                                <!-- Image slideshow -->
+                                <img :src="project.image_urls[0]" class="d-block w-100 mb-3" alt="Project Image">
+                                <!-- Donation details -->
+                                <p><strong>Amount Needed:</strong> <span x-text="project.target_amount"></span></p>
+                                <!-- <p><strong>Collected:</strong> {{ project.collected }} ({{ project.percentCollected }}%)</p> -->
+                                <!-- View Details button -->
+                                <a href="#detail-page" class="btn btn-primary" @click="showDetailPage(project)">View Details</a>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </template>
                 <!-- Add more project cards here -->
             </div>
             <!-- Load More button -->
@@ -172,11 +174,31 @@
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script defer>
         function app() {
             return {
                 async init() {
+                    console.log('Initializing app')
                     await this.checkForToken()
+                    await this.getProjects()
+                },
+                async getProjects() {
+                    console.log('Getting projects')
+                    try {
+                        const token = localStorage.getItem('token');
+                        const headers = {};
+                        if (token) {
+                            headers['Authorization'] = `Bearer ${token}`;
+                        }
+
+                        const response = await axios.get(`${this.baseUrl}/projects`, {headers});
+                        console.log({responseProject: response.data.data.projects})
+                        this.projects = response.data.data.projects;
+                    } catch (error) {
+                        console.log('Error getting projects')
+                        console.error(error);
+                    }
                 },
                 async logout() {
                     console.log('Logging out')
@@ -184,8 +206,8 @@
                     this.isAuthenticated = false
                 },
                 async checkForToken() {
+                    console.log('Checking for token')
                     token = localStorage.getItem('token')
-                    console.log(token)
                     if (token) {
                         console.log('Token found')
                         this.isAuthenticated = true
@@ -193,6 +215,7 @@
                     }
                     return false;
                 },
+                baseUrl: 'http://localhost:8180',
                 isLoading: false,
                 isAuthenticated: false,
                 projects: [],
