@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload New Project - DonationHub</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+
+
+</head>
+
+<body x-data="app()">
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">DonationHub</a>
+        </div>
+    </nav>
+
+    <!-- Content -->
+    <div class="container mt-4">
+        <h2>Create New Project</h2>
+        <form @submit.prevent="submitProject">
+            <div class="form-group">
+                <label for="projectName">Project Name</label>
+                <input type="text" class="form-control" id="projectName" placeholder="Enter project name" x-model="form.title">
+            </div>
+            <div class="form-group">
+                <label for="projectDescription">Project Description</label>
+                <textarea class="form-control" id="projectDescription" rows="3" placeholder="Enter project description" x-model="form.description"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="dueDate">Due Date</label>
+                <input type="date" class="form-control" id="dueDate" x-model="form.due_at">
+            </div>
+            <div class="form-group">
+                <label for="targetAmount">Target Amount</label>
+                <input type="number" class="form-control" id="targetAmount" placeholder="Enter target amount" x-model="form.target_amount">
+            </div>
+            <div class="form-group">
+                <label for="currency">Currency</label>
+                <select class="form-control" id="currency" x-model="form.currency">
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="GBP">GBP</option>
+                    <option value="JPY">JPY</option>
+                    <option value="JPY">IDR</option>
+                </select>
+            </div>
+
+            <template x-for="image in form.image_urls" :key="image">
+                <img :src="image" alt="Project Image" class="img-fluid">
+            </template>
+
+            <div class="form-group">
+                <label for="projectImage">Project Image</label>
+                <input type="file" class="form-control-file" @change="uploadImage">
+            </div>
+            <button type="submit" class="btn btn-primary">Create Project</button>
+        </form>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white mt-5">
+        <div class="container py-4">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>DonationHub</h5>
+                    <p>A platform connecting donors with those in need.</p>
+                </div>
+                <div class="col-md-6">
+                    <h5>Contact Us</h5>
+                    <ul>
+                        <li>Email: info@donationhub.com</li>
+                        <li>Phone: +1 123-456-7890</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="text-center py-2" style="background-color: #343a40;">
+            &copy; 2024 DonationHub. All rights reserved.
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script defer>
+        function app() {
+            return {
+                async init() {
+                    await this.getMe()
+                    // make sure user role is requester
+                    // todo : check user role
+                },
+                async submitProject() {
+                    var data = this.form;
+                    // convert due at to unix timestamp
+                    data.due_at = new Date(data.due_at).getTime() / 1000;
+                    // target amount should be a number
+                    data.target_amount = parseFloat(data.target_amount);
+
+                    try {
+                        const response = await axios.post(`${this.baseUrl}/projects`, data, {
+                            headers: {
+                                Authorization: `Bearer ${localStorage.getItem('token')}`
+                            }
+                        });
+                        console.log(response.data)
+                        window.location.href = '/index.html?reason=project_created_successfully'
+                    } catch (error) {
+                        console.error('Error creating project')
+                        console.error(error)
+                    }
+                },
+                async getMe() {
+                    if (!localStorage.getItem('token')) {
+                        window.location.href = '/login.html?reason=user_not_logged_in'
+                    }
+                    try {
+                        const response = await axios.get(`${this.baseUrl}/me`, {
+                            headers: {
+                                Authorization: `Bearer ${localStorage.getItem('token')}`
+                            }
+                        });
+                        localStorage.setItem('role', response.data.data.roles);
+                        await this.isRequester()
+                    } catch (error) {
+                        console.error('Error getting user')
+                        console.error(error)
+                    }
+                },
+                async isRequester() {
+                    const role = localStorage.getItem('role');
+                    if (role === 'requester') {
+                        console.log('User is requester')
+                        this.requester = true
+                        return true
+                    } else {
+                        window.location.href = '/login.html?reason=unauthorized_user'
+                    }
+                },
+                async uploadImage(event) {
+                    const file = event.target.files[0];
+                    this.mime = file.type;
+                    this.filesize = file.size;
+                    // request temporary signed url
+                    const response = await axios.get(`${this.baseUrl}/projects/upload?mime_type=${this.mime}&file_size=${this.filesize}`, {
+                        headers: {
+                            Authorization: `Bearer ${localStorage.getItem('token')}`
+                        }
+                    });
+
+                    console.log(response.data)
+                    // upload image to signed url
+                    const signedUrl = response.data.data.url;
+
+                    this.uploadToS3(signedUrl, file, (progress) => {
+                        console.log(progress)
+                    }).then((response) => {
+                        console.log(response)
+                        this.form.image_urls.push(response.data.data.url)
+                    }).catch((error) => {
+                        console.error('Error uploading image')
+                        console.error(error)
+                    })
+
+                },
+                async uploadToS3(uploadURL, file, onProgress) {
+                    return new Promise((resolve) => {
+                        const xhr = new XMLHttpRequest();
+                        xhr.upload.addEventListener("progress", e => {
+                            if (e.lengthComputable) {
+                                onProgress(e.loaded / e.total);
+                            }
+                        })
+                        xhr.onreadystatechange = e => {
+                            if (xhr.readyState !== xhr.DONE) {
+                                return
+                            }
+                            resolve({status: xhr.status, body: xhr.responseText});
+                        }
+                        xhr.open("PUT", uploadURL, true);
+                        xhr.setRequestHeader("x-amz-acl", "public-read");
+                        xhr.send(file);
+                    });
+                },
+                mime: '',
+                filesize: 0,
+                baseUrl: 'http://localhost:8180',
+                form: {
+                    title: '',
+                    description: '',
+                    due_at: '',
+                    target_amount: '',
+                    currency: '',
+                    image_urls: [
+                        "https://via.placeholder.com/150x150?text=image1",
+                        "https://via.placeholder.com/150x150?text=image2",
+                    ]
+                },
+            }
+        }
+    </script>
+</body>
+
+</html>
