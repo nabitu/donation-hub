@@ -68,7 +68,10 @@
                                 </p>
                                 <!-- <p><strong>Collected:</strong> {{ project.collected }} ({{ project.percentCollected }}%)</p> -->
                                 <!-- View Details button -->
-                                <a href="#detail-page" class="btn btn-primary" @click="showDetailPage(project)">View Details</a>
+                                <a href="#detail-page" class="btn btn-primary" @click="showDetailPage(project)" :class="{'btn-primary' : project.status != 'need_review', 'btn-warning': project.status == 'need_review'}">
+                                    <span x-show="project.status == 'need_review'">Review</span>
+                                    <span x-show="project.status != 'need_review'">View Details</span>
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -124,7 +127,15 @@
                     <li><span x-text="donation.amount"></span> <span x-text="donation.currency"></span> - <span x-text="donation.message"></span> by <span x-text="donation.donor.username"></span></li>
                 </template>
             </ul>
-            <button class="btn btn-success" @click="isShowDonateForm = true">Donate Now</button>
+            <template x-if="!admin">
+                <button class="btn btn-success" @click="isShowDonateForm = true">Donate Now</button>
+            </template>
+            <template x-if="admin && selectedProject.status == 'need_review'">
+                <div>
+                    <button class="btn btn-success" @click="approveProject">Approve</button>
+                    <button class="btn btn-danger" @click="rejectProject">Reject</button>
+                </div>
+            </template>
 
 
             <!-- Donation Form -->
@@ -204,6 +215,42 @@
                     await this.checkForToken()
                     await this.getProjects()
                     await this.getMe()
+                },
+                async approveProject() {
+                    if (!confirm('Are you sure you want to approve this project?')) {
+                        return
+                    }
+
+                    try {
+                        const response = await axios.put(`${this.baseUrl}/projects/${this.selectedProject.id}/review`, {
+                            status: 'approved'
+                        }, {
+                            headers: {
+                                Authorization: `Bearer ${localStorage.getItem('token')}`
+                            }
+                        });
+                        this.selectedProject.status = 'approved'
+                    } catch (error) {
+                        alert('Error approving project')
+                    }
+                },
+                async rejectProject() {
+                    if (!confirm('Are you sure you want to reject this project?')) {
+                        return
+                    }
+
+                    try {
+                        const response = await axios.put(`${this.baseUrl}/projects/${this.selectedProject.id}/review`, {
+                            status: 'rejected'
+                        }, {
+                            headers: {
+                                Authorization: `Bearer ${localStorage.getItem('token')}`
+                            }
+                        });
+                        this.selectedProject.status = 'rejected'
+                    } catch (error) {
+                        alert('Error rejecting project')
+                    }
                 },
                 formatNumber(number) {
                     return new Intl.NumberFormat().format(number)
@@ -309,7 +356,7 @@
                                 Authorization: `Bearer ${localStorage.getItem('token')}`
                             }
                         });
-                        this.selectedProjectDonations = response.data.data.donations
+                        this.selectedProjectDonations = response.data.data.donations ?? []
                     } catch (error) {
                         console.log(error)
                     }
