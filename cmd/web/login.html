@@ -116,13 +116,11 @@
                             this.loginError = 'Invalid username or password';
                         }
                     } catch (error) {
-                        console.error(error);
+                        this.loginError = error.response.data.msg;
                     }
                 },
                 async register(e) {
                     e.preventDefault();
-                    console.log('Registering with username:', this.rusername, 'email:', this.remail, 'and password', this.rpassword)
-
                     try {
                         const response = await axios.post(`${this.baseUrl}/users/register`, {
                             username: this.rusername,
@@ -131,13 +129,12 @@
                             role: 'requester'
                         });
                         if (response.status === 200) {
-                            console.log('Registration successful');
-                            this.showLoginForm = true;
+                            this.registerSuccess = true;
                         } else {
                             console.error('Registration failed');
                         }
                     } catch (error) {
-                        console.error(error);
+                        alert('Registration failed')
                     }
                 },
                 registerSuccess: false,

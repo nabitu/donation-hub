@@ -19,12 +19,17 @@
     </style>
 </head>
 
-<body>
+<body x-data="app()">
     <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" href="#">DonationHub</a>
-            <button class="btn btn-outline-light ml-auto">Log Out</button>
+            <div x-show="isAuthenticated">
+                <button class="btn btn-outline-light ml-auto" @click.prevent="logout">Log Out</button>
+            </div>
+            <div x-show="!isAuthenticated">
+                <a class="btn btn-outline-light ml-auto" href="login.html">Log In</a>
+            </div>
         </div>
     </nav>
 
@@ -47,8 +52,7 @@
                             <p class="card-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut eget ligula
                                 auctor, rhoncus magna et, ullamcorper velit.</p>
                             <!-- Image slideshow -->
-                            <img src="https://via.placeholder.com/600x400" class="d-block w-100 mb-3"
-                                alt="Project Image">
+                            <img src="https://via.placeholder.com/600x400" class="d-block w-100 mb-3" alt="Project Image">
                             <!-- Donation details -->
                             <p><strong>Amount Needed:</strong> $5000</p>
                             <p><strong>Collected:</strong> $2500 (50%)</p>
@@ -167,36 +171,33 @@
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script>
-        // JavaScript logic to show the detail page when the "View Details" button is clicked
-        function showDetailPage() {
-            document.getElementById('home-page').style.display = 'none';
-            document.getElementById('detail-page').style.display = 'block';
-        }
-
-        // JavaScript logic for "Load More" button
-        document.getElementById('load-more-btn').addEventListener('click', function () {
-            // Add more project cards here (6 per page)
-            // This is a dummy implementation, you should load more projects dynamically
-            const projectCards = document.getElementById('project-cards');
-            for (let i = 0; i < 6; i++) {
-                const projectCard = document.createElement('div');
-                projectCard.classList.add('col-md-4');
-                projectCard.innerHTML = `
-          <div class="card project-card">
-            <div class="card-body">
-              <h5 class="card-title">Project Title ${i + 4}</h5>
-              <p class="card-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut eget ligula auctor, rhoncus magna et, ullamcorper velit.</p>
-              <img src="https://via.placeholder.com/600x400" class="d-block w-100 mb-3" alt="Project Image">
-              <p><strong>Amount Needed:</strong> $5000</p>
-              <p><strong>Collected:</strong> $2500 (50%)</p>
-              <a href="#detail-page" class="btn btn-primary" onclick="showDetailPage()">View Details</a>
-            </div>
-          </div>
-        `;
-                projectCards.appendChild(projectCard);
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script defer>
+        function app() {
+            return {
+                async init() {
+                    await this.checkForToken()
+                },
+                async logout() {
+                    console.log('Logging out')
+                    localStorage.removeItem('token')
+                    this.isAuthenticated = false
+                },
+                async checkForToken() {
+                    token = localStorage.getItem('token')
+                    console.log(token)
+                    if (token) {
+                        console.log('Token found')
+                        this.isAuthenticated = true
+                        return true
+                    }
+                    return false;
+                },
+                isLoading: false,
+                isAuthenticated: false,
+                projects: [],
             }
-        });
+        }
     </script>
 </body>
 
