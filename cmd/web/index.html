@@ -55,7 +55,11 @@
                                 <!-- Image slideshow -->
                                 <img :src="project.image_urls[0]" class="d-block w-100 mb-3" alt="Project Image">
                                 <!-- Donation details -->
-                                <p><strong>Amount Needed:</strong> <span x-text="project.target_amount"></span></p>
+                                <p>
+                                    <strong>Amount Needed:</strong>
+                                    <span x-text="formatNumber(project.target_amount)"></span>
+                                    <span x-text="project.currency"></span>
+                                </p>
                                 <!-- <p><strong>Collected:</strong> {{ project.collected }} ({{ project.percentCollected }}%)</p> -->
                                 <!-- View Details button -->
                                 <a href="#detail-page" class="btn btn-primary" @click="showDetailPage(project)">View Details</a>
@@ -67,7 +71,7 @@
             </div>
             <!-- Load More button -->
             <div class="text-center mt-4">
-                <button id="load-more-btn" class="btn btn-secondary">Load More</button>
+                <button id="load-more-btn" class="btn btn-secondary" @click.prevent="loadmore">Load More</button>
             </div>
         </div>
 
@@ -183,6 +187,9 @@
                     await this.checkForToken()
                     await this.getProjects()
                 },
+                formatNumber(number) {
+                    return new Intl.NumberFormat().format(number)
+                },
                 async getProjects() {
                     console.log('Getting projects')
                     try {
@@ -192,9 +199,9 @@
                             headers['Authorization'] = `Bearer ${token}`;
                         }
 
-                        const response = await axios.get(`${this.baseUrl}/projects`, {headers});
-                        console.log({responseProject: response.data.data.projects})
-                        this.projects = response.data.data.projects;
+                        const response = await axios.get(`${this.baseUrl}/projects?last_key=${this.lastKey}`, {headers});
+                        this.lastKey = response.data.data.last_key;
+                        this.projects = [...this.projects, ...response.data.data.projects];
                     } catch (error) {
                         console.log('Error getting projects')
                         console.error(error);
@@ -215,6 +222,10 @@
                     }
                     return false;
                 },
+                async loadmore() {
+                    this.getProjects()
+                },
+                lastKey: null,
                 baseUrl: 'http://localhost:8180',
                 isLoading: false,
                 isAuthenticated: false,
