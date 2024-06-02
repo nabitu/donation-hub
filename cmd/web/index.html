@@ -24,6 +24,9 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" href="#">DonationHub</a>
+            <div x-show="isAdmin">
+                <a class="btn btn-outline-light ml-auto" href="users.html">Registered User</a>
+            </div>
             <div x-show="isAuthenticated">
                 <button class="btn btn-outline-light ml-auto" @click.prevent="logout">Log Out</button>
             </div>
@@ -225,6 +228,26 @@
                 async loadmore() {
                     this.getProjects()
                 },
+                async getMe() {
+                    try {
+                        const response = await axios.get('/api/users/me', {
+                            headers: {
+                                Authorization: `Bearer ${localStorage.getItem('token')}`
+                            }
+                        });
+                        localStorage.setItem('role', response.data.data.role);
+                    } catch (error) {
+                        console.log('User is not authenticated')
+                    }
+                },
+                isAdmin() {
+                    $role = localStorage.getItem('role');
+                    if ($role === 'admin') {
+                        this.admin = true;
+                    }
+                    return $role === 'admin';
+                },
+                admin: false,
                 lastKey: null,
                 baseUrl: 'http://localhost:8180',
                 isLoading: false,

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <title>Registered Users</title>
+</head>
+
+<body x-data="app()">
+
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">DonationHub</a>
+            <div x-show="isAuthenticated">
+                <button class="btn btn-outline-light ml-auto" @click.prevent="logout">Log Out</button>
+            </div>
+            <div x-show="!isAuthenticated">
+                <a class="btn btn-outline-light ml-auto" href="login.html">Log In</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <template x-for="user in users">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Username: <span x-text="user.username"></span></h5>
+                    <p class="card-text">Email: <span x-text="user.email"></span></p>
+                    <p class="card-text">Role: <span x-text="user.role.join(', ')"></span></p>
+                </div>
+            </div>
+        </template>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white mt-5">
+        <div class="container py-4">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>DonationHub</h5>
+                    <p>A platform connecting donors with those in need.</p>
+                </div>
+                <div class="col-md-6">
+                    <h5>Contact Us</h5>
+                    <ul>
+                        <li>Email: info@donationhub.com</li>
+                        <li>Phone: +1 123-456-7890</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="text-center py-2" style="background-color: #343a40;">
+            &copy; 2024 DonationHub. All rights reserved.
+        </div>
+    </footer>
+
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script defer>
+        function app() {
+            return {
+                async init() {
+                    console.log('Initialized');
+                    await this.getMe();
+                    if (this.isAdmin()) {
+                        console.log('Admin');
+                    } else {
+                        window.location.href = '/login.html';
+                    }
+                },
+                async getUsers() {
+                    try {
+                        const response = await axios.get('/api/users', {
+                            headers: {
+                                Authorization: `Bearer ${localStorage.getItem('token')}`
+                            }
+                        });
+                        this.users = response.data.data.users;
+                    } catch (error) {
+                        console.error(error.response.data.msg);
+                    }
+                },
+                async getMe() {
+                    try {
+                        const response = await axios.get('/api/users/me', {
+                            headers: {
+                                Authorization: `Bearer ${localStorage.getItem('token')}`
+                            }
+                        });
+                        localStorage.setItem('role', response.data.data.role);
+                    } catch (error) {
+                        window.location.href = '/login.html';
+                    }
+                },
+                isAdmin() {
+                    return localStorage.getItem('role') === 'admin';
+                },
+                users: []
+            }
+        }
+    </script>
+</body>
+
+</html>
