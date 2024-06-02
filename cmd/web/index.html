@@ -27,6 +27,9 @@
             <div x-show="admin">
                 <a class="btn btn-outline-light ml-auto" href="admin.html">Dashboard Admin</a>
             </div>
+            <div x-show="requester">
+                <a class="btn btn-outline-light ml-auto" href="upload.html">Create Project</a>
+            </div>
             <div x-show="isAuthenticated">
                 <button class="btn btn-outline-light ml-auto" @click.prevent="logout">Log Out</button>
             </div>
@@ -261,6 +264,7 @@
                         console.log('User is authenticated', response.data.data.roles)
                         localStorage.setItem('role', response.data.data.roles);
                         await this.isAdmin()
+                        await this.isRequester()
                     } catch (error) {
                         console.error('Error getting user')
                         console.error(error)
@@ -273,6 +277,15 @@
                     if (role === 'admin') {
                         console.log('User is admin')
                         this.admin = true
+                        return true
+                    }
+                },
+                async isRequester() {
+                    console.log('Checking if user is requester')
+                    const role = localStorage.getItem('role');
+                    if (role === 'requester') {
+                        console.log('User is requester')
+                        this.requester = true
                         return true
                     }
                 },
@@ -331,6 +344,7 @@
                     this.showingDetailPage = true;
                 },
                 admin: false,
+                requester: false,
                 lastKey: null,
                 baseUrl: 'http://localhost:8180',
                 isLoading: false,
