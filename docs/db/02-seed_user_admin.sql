@@ -1,15 +1,56 @@
 USE donation_hub;
+
 INSERT INTO `users` (`id`, `username`, `email`, `password`, `created_at`)
 VALUES
 (1, 'admin', 'admin@donationhub.com', 'admin123', UNIX_TIMESTAMP()),
 (2, 'donor', 'donor@donationhub.com', 'donor123', UNIX_TIMESTAMP()),
-(3, 'requester', 'requester@donationhub.com', 'requester123', UNIX_TIMESTAMP());
+(3, 'requester', 'requester@donationhub.com', 'requester123', UNIX_TIMESTAMP()),
+(4, 'user1', 'user1@donationhub.com', 'user123', UNIX_TIMESTAMP()),
+(5, 'user2', 'user2@donationhub.com', 'user123', UNIX_TIMESTAMP()),
+(6, 'user3', 'user3@donationhub.com', 'user123', UNIX_TIMESTAMP()),
+(7, 'user4', 'user4@donationhub.com', 'user123', UNIX_TIMESTAMP()),
+(8, 'user5', 'user5@donationhub.com', 'user123', UNIX_TIMESTAMP()),
+(9, 'user6', 'user6@donationhub.com', 'user123', UNIX_TIMESTAMP()),
+(10, 'user7', 'user7@donationhub.com', 'user123', UNIX_TIMESTAMP()),
+(11, 'user8', 'user8@donationhub.com', 'user123', UNIX_TIMESTAMP()),
+(12, 'user9', 'user9@donationhub.com', 'user123', UNIX_TIMESTAMP()),
+(13, 'user10', 'user10@donationhub.com', 'user123', UNIX_TIMESTAMP()),
+(14, 'user11', 'user11@donationhub.com', 'user123', UNIX_TIMESTAMP()),
+(15, 'user12', 'user12@donationhub.com', 'user123', UNIX_TIMESTAMP()),
+(16, 'user13', 'user13@donationhub.com', 'user123', UNIX_TIMESTAMP()),
+(17, 'user14', 'user14@donationhub.com', 'user123', UNIX_TIMESTAMP()),
+(18, 'user15', 'user15@donationhub.com', 'user123', UNIX_TIMESTAMP()),
+(19, 'user16', 'user16@donationhub.com', 'user123', UNIX_TIMESTAMP()),
+(20, 'user17', 'user17@donationhub.com', 'user123', UNIX_TIMESTAMP()),
+(21, 'user18', 'user18@donationhub.com', 'user123', UNIX_TIMESTAMP()),
+(22, 'user19', 'user19@donationhub.com', 'user123', UNIX_TIMESTAMP()),
+(23, 'user20', 'user20@donationhub.com', 'user123', UNIX_TIMESTAMP());
 
 INSERT INTO `user_roles` (`user_id`, `role`)
 VALUES
 (1, 'admin'),
 (2, 'donor'),
-(3, 'requester');
+(3, 'requester'),
+(4, 'donor'),
+(5, 'donor'),
+(6, 'donor'),
+(7, 'donor'),
+(8, 'donor'),
+(9, 'donor'),
+(10, 'donor'),
+(11, 'donor'),
+(12, 'donor'),
+(13, 'donor'),
+(14, 'donor'),
+(15, 'donor'),
+(16, 'donor'),
+(17, 'donor'),
+(18, 'donor'),
+(19, 'donor'),
+(20, 'donor'),
+(21, 'donor'),
+(22, 'donor'),
+(23, 'donor');
 
 INSERT  INTO `projects` (`id`, `name`, `description`, `target_amount`, `collection_amount`, `currency`, `status`, `requester_id`, `due_at`, `created_at`, `updated_at`)
 VALUES
