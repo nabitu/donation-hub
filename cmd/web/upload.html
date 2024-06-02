@@ -51,9 +51,13 @@
                 </select>
             </div>
 
+            <template x-for="image in form.image_urls" :key="image">
+                <img :src="image" alt="Project Image" class="img-fluid">
+            </template>
+
             <div class="form-group">
                 <label for="projectImage">Project Image</label>
-                <input type="file" class="form-control-file" id="projectImage" x-model="form.image_urls">
+                <input type="file" class="form-control-file" @change="uploadImage">
             </div>
             <button type="submit" class="btn btn-primary">Create Project</button>
         </form>
@@ -136,9 +140,37 @@
                         window.location.href = '/login.html?reason=unauthorized_user'
                     }
                 },
-                async uploadImage() {
-                    // todo : make upload image api to s3
+                async uploadImage(event) {
+                    const file = event.target.files[0];
+                    this.mime = file.type;
+                    this.filesize = file.size;
+                    // request temporary signed url
+                    const response = await axios.get(`${this.baseUrl}/projects/upload?mime_type=${this.mime}&file_size=${this.filesize}`, {
+                        headers: {
+                            Authorization: `Bearer ${localStorage.getItem('token')}`
+                        }
+                    });
+
+                    console.log(response.data)
+                    // upload image to signed url
+                    const signedUrl = response.data.data.url;
+
+                    const options = {
+                        headers: {
+                            'Content-Type': this.mime
+                        }
+                    }
+
+                    try {
+                        await axios.put(signedUrl, file, options);
+                    } catch (error) {
+                        console.error('Error uploading image to s3 bucket')
+                        console.error(error)
+                    }
+
                 },
+                mime: '',
+                filesize: 0,
                 baseUrl: 'http://localhost:8180',
                 form: {
                     title: '',
@@ -147,7 +179,7 @@
                     target_amount: '',
                     currency: '',
                     image_urls: [
-                        "https://images.unsplash.com/photo-1612838320302-3b3b3b3b3b3b",
+
                     ]
                 },
             }
