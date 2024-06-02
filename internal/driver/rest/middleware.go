@@ -40,6 +40,12 @@ func authTokenMiddleware(next http.HandlerFunc, c *Config, isOptional bool, role
 
 		payload, err := c.AuthTokenService.ValidateToken(token)
 
+		// make sure access token is valid if present
+		if authHeader != "" && err != nil {
+			ResponseErrorInvalidAccessToken(w, "invalid access token")
+			return
+		}
+
 		ctx = context.WithValue(ctx, "withAuth", true)
 		ctx = context.WithValue(ctx, "payload", payload)
 		ctx = context.WithValue(ctx, "auth_id", payload.UserID)
