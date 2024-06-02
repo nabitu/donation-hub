@@ -51,3 +51,13 @@ services:
       - MYSQL_ROOT_PASSWORD=test1234
     volumes:
       - ../../docs/db:/docker-entrypoint-initdb.d
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - 8080:80
+    volumes:
+      - ../../cmd/web:/usr/share/nginx/html
+    depends_on:
+      server:
+        condition: service_started

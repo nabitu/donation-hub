@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/isdzulqor/donation-hub/internal/utill/role"
 	"log"
+
+	"github.com/isdzulqor/donation-hub/internal/utill/role"
 
 	"github.com/isdzulqor/donation-hub/internal/core/model"
 	"github.com/isdzulqor/donation-hub/internal/core/service/user"
@@ -72,7 +73,11 @@ func (s *Storage) RequestUploadUrl(ctx context.Context, input model.RequestUploa
 }
 
 func (s *Storage) SubmitProject(ctx context.Context, input model.SubmitProjectInput) (*model.SubmitProjectOutput, error) {
-	input.Validate()
+	err := input.Validate()
+	if err != nil {
+		return nil, err
+	}
+
 	// validate user, make sure role is valid
 	ok, err := s.userDataStorage.UserHasRole(ctx, input.UserID, _type.ROLE_REQUESTER)
 	if !ok || err != nil {
@@ -181,17 +186,37 @@ func (s *Storage) DonateToProject(ctx context.Context, input model.DonateToProje
 		return errors.New("ERR_PROJECT_NEED_REVIEW")
 	}
 
+	if p.Status != _type.PROJECT_APPROVED {
+		return errors.New("only project with status approved")
+	}
+
 	if err != nil {
 		return errors.New(fmt.Sprintf("failed to get project, err: %s", err.Error()))
 	}
 
-	if float64(input.Amount) > p.TargetAmount {
+	if float64(input.Amount+int64(p.CollectionAmount)) > p.TargetAmount {
 		return errors.New("ERR_TOO_MUCH_DONATION")
 	}
 
 	err = s.storage.DonateToProject(ctx, input)
 	if err != nil {
 		return errors.New(fmt.Sprintf("failed to donate to project, err: %s", err.Error()))
+	}
+
+	p, err = s.storage.GetProjectById(ctx, model.GetProjectByIdInput{ProjectId: input.ProjectId})
+	if err != nil {
+		return errors.New(fmt.Sprintf("failed to get project, err: %s", err.Error()))
+	}
+
+	if p.CollectionAmount >= p.TargetAmount {
+		err = s.storage.ReviewByAdmin(ctx, model.ReviewProjectByAdminInput{
+			ProjectId: input.ProjectId,
+			Status:    _type.PROJECT_COMPLETEd,
+			UserID:    input.UserID,
+		})
+		if err != nil {
+			return errors.New(fmt.Sprintf("failed to review project, err: %s", err.Error()))
+		}
 	}
 
 	return nil
@@ -206,7 +231,7 @@ func (s *Storage) ListDonationByProjectId(ctx context.Context, input model.ListP
 	}
 
 	// jika status project masih need_review, maka tidak bisa donate
-	if p.Status == _type.PROJECT_NEED_REVIEW {
+	if p.Status == _type.PROJECT_NEED_REVIEW && ctx.Value("isAdmin") == false {
 		return nil, errors.New("ERR_PROJECT_NEED_REVIEW")
 	}
 

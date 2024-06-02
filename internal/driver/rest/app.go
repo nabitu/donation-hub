@@ -2,8 +2,9 @@ package rest
 
 import (
 	"fmt"
-	"github.com/isdzulqor/donation-hub/internal/core/service/auth"
 	"net/http"
+
+	"github.com/isdzulqor/donation-hub/internal/core/service/auth"
 
 	"github.com/isdzulqor/donation-hub/internal/core/service/project"
 	"github.com/isdzulqor/donation-hub/internal/core/service/user"
@@ -57,13 +58,16 @@ func StartApp(c Config) error {
 	app.HandleFunc("GET /projects", authTokenMiddleware(handler.HandleProjects, &c, true, []string{"admin", "requester", "donor"}))
 
 	// token required routes
+	app.HandleFunc("GET /me", authTokenMiddleware(handler.HandleMe, &c, false, []string{"admin", "requester", "donor"}))
 	app.HandleFunc("GET /projects/upload", authTokenMiddleware(handler.HandleRequestProjectUrl, &c, false, []string{"requester"}))
 	app.HandleFunc("PUT /projects/{id}/review", authTokenMiddleware(handler.HandleProjectReview, &c, false, []string{"admin"}))
 	app.HandleFunc("POST /projects", authTokenMiddleware(handler.HandleSubmitProject, &c, false, []string{"requester"}))
 	app.HandleFunc("POST /projects/{id}/donations", authTokenMiddleware(handler.HandleDonateProject, &c, false, []string{"donor"}))
 
+	appHandle := RecoverPanicMiddleware(app)
+	appHandle = corsMiddleware(appHandle)
 	fmt.Println("Starting app on port", c.Port)
-	_ = http.ListenAndServe(":"+c.Port, app)
+	_ = http.ListenAndServe(":"+c.Port, appHandle)
 
 	return nil
 }

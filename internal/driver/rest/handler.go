@@ -3,9 +3,10 @@ package rest
 import (
 	"encoding/json"
 	"fmt"
-	_type "github.com/isdzulqor/donation-hub/internal/core/type"
 	"net/http"
 	"strconv"
+
+	_type "github.com/isdzulqor/donation-hub/internal/core/type"
 
 	"github.com/isdzulqor/donation-hub/internal/core/model"
 	"github.com/isdzulqor/donation-hub/internal/core/service/project"
@@ -182,13 +183,23 @@ func (h *Handler) HandleProjects(w http.ResponseWriter, r *http.Request) {
 	}
 	req.Limit = limit
 
-	if r.Context().Value("auth_id") != "" {
+	lastKey := r.URL.Query().Get("last_key")
+	req.LastKey = lastKey
+
+	if r.Context().Value("withAuth") == true {
 		req.UserID = r.Context().Value("auth_id").(int64)
+		roles := r.Context().Value("auth_roles").([]string)
+		// if roles is admin, make r.isAdmin = true
+		for _, role := range roles {
+			if role == "admin" {
+				req.IsAdmin = true
+				break
+			}
+		}
 	}
 
 	projects, err := h.ProjectService.ListProject(r.Context(), req)
 	if err != nil {
-		fmt.Println("error get projects", err)
 		ResponseErrorBadRequest(w, err.Error())
 		return
 	}
@@ -215,7 +226,7 @@ func (h *Handler) HandleProjectDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if modelProject.Status == _type.PROJECT_NEED_REVIEW {
+	if modelProject.Status == _type.PROJECT_NEED_REVIEW && r.Context().Value("isAdmin") == false {
 		ResponseErrorNotFound(w, "project not found")
 		return
 	}
@@ -287,4 +298,22 @@ func (h *Handler) HandleProjectDonations(w http.ResponseWriter, r *http.Request)
 	}
 
 	ResponseSuccess(w, donations)
+}
+
+func (h *Handler) HandleMe(w http.ResponseWriter, r *http.Request) {
+	var req model.UserMeInput
+
+	// Call the project service to donate to the project
+	if r.Context().Value("auth_id") != "" {
+		req.UserID = r.Context().Value("auth_id").(int64)
+	}
+
+	me, err := h.UserService.Me(r.Context(), req)
+	if err != nil {
+		fmt.Println("error get me", err)
+		ResponseErrorBadRequest(w, err.Error())
+		return
+	}
+
+	ResponseSuccess(w, me)
 }
