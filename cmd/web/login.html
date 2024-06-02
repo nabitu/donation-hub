@@ -58,6 +58,18 @@
                         <input type="email" class="form-control" id="registrationEmail" placeholder="Enter email" x-model="remail">
                     </div>
                     <div class="form-group">
+                        <label for="registrationAsRole">Register As</label>
+                        <select
+                                name="role"
+                                id="registrationAsRole"
+                                x-model="regRole"
+                                class="form-control"
+                        >
+                            <option value="requester">Requester</option>
+                            <option value="donor">Donor</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <label for="registrationPassword">Password</label>
                         <input type="password" class="form-control" id="registrationPassword" placeholder="Password" x-model="rpassword">
                     </div>
@@ -126,7 +138,7 @@
                             username: this.rusername,
                             email: this.remail,
                             password: this.rpassword,
-                            role: 'requester'
+                            role: this.regRole
                         });
                         if (response.status === 200) {
                             this.registerSuccess = true;
@@ -145,7 +157,8 @@
                 password: '',
                 rusername: '',
                 remail: '',
-                rpassword: ''
+                rpassword: '',
+                regRole: ''
             }
         }
     </script>
