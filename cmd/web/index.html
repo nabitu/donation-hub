@@ -189,6 +189,7 @@
                     console.log('Initializing app')
                     await this.checkForToken()
                     await this.getProjects()
+                    await this.getMe()
                 },
                 formatNumber(number) {
                     return new Intl.NumberFormat().format(number)
@@ -230,22 +231,34 @@
                 },
                 async getMe() {
                     try {
-                        const response = await axios.get('/api/users/me', {
+
+                        console.log('Getting user')
+                        if (!localStorage.getItem('token')) {
+                            console.log('No token found, skipping user check')
+                        }
+
+                        const response = await axios.get(`${this.baseUrl}/me`, {
                             headers: {
                                 Authorization: `Bearer ${localStorage.getItem('token')}`
                             }
                         });
-                        localStorage.setItem('role', response.data.data.role);
+                        console.log('User is authenticated', response.data.data.roles)
+                        localStorage.setItem('role', response.data.data.roles);
+                        await this.isAdmin()
                     } catch (error) {
-                        console.log('User is not authenticated')
+                        console.error('Error getting user')
+                        console.error(error)
                     }
+
                 },
-                isAdmin() {
-                    $role = localStorage.getItem('role');
-                    if ($role === 'admin') {
-                        this.admin = true;
+                async isAdmin() {
+                    console.log('Checking if user is admin')
+                    const role = localStorage.getItem('role');
+                    if (role === 'admin') {
+                        console.log('User is admin')
+                        this.admin = true
+                        return true
                     }
-                    return $role === 'admin';
                 },
                 admin: false,
                 lastKey: null,

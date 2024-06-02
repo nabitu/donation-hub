@@ -106,19 +106,6 @@
     <script defer>
         function app() {
             return {
-                async getMe() {
-                    try {
-                        const response = await axios.get(`${this.baseUrl}/users/me`, {
-                            headers: {
-                                Authorization: `Bearer ${localStorage.getItem('token')}`
-                            }
-                        });
-                        // save role to local storage
-                        localStorage.setItem('role', response.data.data.role);
-                    } catch (error) {
-                        console.error(error.response.data.msg);
-                    }
-                },
                 async login(e) {
                     e.preventDefault();
                     try {
@@ -129,7 +116,6 @@
                         if (response.status === 200) {
                             console.log('Login successful');
                             localStorage.setItem('token', response.data.data.access_token);
-                            await getMe();
                             window.location.href = '/index.html';
                         } else {
                             this.loginError = 'Invalid username or password';

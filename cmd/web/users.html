@@ -14,13 +14,7 @@
     <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="#">DonationHub</a>
-            <div x-show="isAuthenticated">
-                <button class="btn btn-outline-light ml-auto" @click.prevent="logout">Log Out</button>
-            </div>
-            <div x-show="!isAuthenticated">
-                <a class="btn btn-outline-light ml-auto" href="login.html">Log In</a>
-            </div>
+            <a class="navbar-brand" href="/">DonationHub</a>
         </div>
     </nav>
 
@@ -30,7 +24,7 @@
                 <div class="card-body">
                     <h5 class="card-title">Username: <span x-text="user.username"></span></h5>
                     <p class="card-text">Email: <span x-text="user.email"></span></p>
-                    <p class="card-text">Role: <span x-text="user.role.join(', ')"></span></p>
+                    <p class="card-text">Role: <span x-text="user.roles.join(', ')"></span></p>
                 </div>
             </div>
         </template>
@@ -58,6 +52,7 @@
         </div>
     </footer>
 
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -70,12 +65,14 @@
                     if (this.isAdmin()) {
                         console.log('Admin');
                     } else {
-                        window.location.href = '/login.html';
+                        console.log('Not admin');
+                        // window.location.href = '/login.html';
                     }
+                    await this.getUsers();
                 },
                 async getUsers() {
                     try {
-                        const response = await axios.get('/api/users', {
+                        const response = await axios.get(`${this.baseUrl}/users`, {
                             headers: {
                                 Authorization: `Bearer ${localStorage.getItem('token')}`
                             }
@@ -87,19 +84,20 @@
                 },
                 async getMe() {
                     try {
-                        const response = await axios.get('/api/users/me', {
+                        const response = await axios.get(`${this.baseUrl}/me`, {
                             headers: {
                                 Authorization: `Bearer ${localStorage.getItem('token')}`
                             }
                         });
-                        localStorage.setItem('role', response.data.data.role);
+                        localStorage.setItem('role', response.data.data.roles);
                     } catch (error) {
-                        window.location.href = '/login.html';
+                        console.error(error)
                     }
                 },
                 isAdmin() {
                     return localStorage.getItem('role') === 'admin';
                 },
+                baseUrl: 'http://localhost:8180',
                 users: []
             }
         }
