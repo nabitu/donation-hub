@@ -58,6 +58,7 @@ func StartApp(c Config) error {
 	app.HandleFunc("GET /projects", authTokenMiddleware(handler.HandleProjects, &c, true, []string{"admin", "requester", "donor"}))
 
 	// token required routes
+	app.HandleFunc("GET /me", authTokenMiddleware(handler.HandleMe, &c, false, []string{"admin", "requester", "donor"}))
 	app.HandleFunc("GET /projects/upload", authTokenMiddleware(handler.HandleRequestProjectUrl, &c, false, []string{"requester"}))
 	app.HandleFunc("PUT /projects/{id}/review", authTokenMiddleware(handler.HandleProjectReview, &c, false, []string{"admin"}))
 	app.HandleFunc("POST /projects", authTokenMiddleware(handler.HandleSubmitProject, &c, false, []string{"requester"}))

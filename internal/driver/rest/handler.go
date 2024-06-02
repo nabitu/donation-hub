@@ -299,3 +299,21 @@ func (h *Handler) HandleProjectDonations(w http.ResponseWriter, r *http.Request)
 
 	ResponseSuccess(w, donations)
 }
+
+func (h *Handler) HandleMe(w http.ResponseWriter, r *http.Request) {
+	var req model.UserMeInput
+
+	// Call the project service to donate to the project
+	if r.Context().Value("auth_id") != "" {
+		req.UserID = r.Context().Value("auth_id").(int64)
+	}
+
+	me, err := h.UserService.Me(r.Context(), req)
+	if err != nil {
+		fmt.Println("error get me", err)
+		ResponseErrorBadRequest(w, err.Error())
+		return
+	}
+
+	ResponseSuccess(w, me)
+}

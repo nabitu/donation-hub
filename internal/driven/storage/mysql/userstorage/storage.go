@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/isdzulqor/donation-hub/internal/core/model"
@@ -111,18 +112,34 @@ func (s Storage) GetUserByUsername(ctx context.Context, username string) (*model
 
 func (s Storage) GetUserById(ctx context.Context, id int64) (*model.User, error) {
 	var du DatabaseUser
-	query := "SELECT * FROM users WHERE id = ?"
+	query := `SELECT 
+    			users.id as id,
+    			users.username as username,
+    			users.email as email,
+    			GROUP_CONCAT(user_roles.role) AS roles
+				FROM 
+				    users 
+				JOIN 
+				    user_roles ON users.id = user_roles.user_id
+                WHERE id = ?
+                GROUP BY users.id`
 	err := s.container.Connection.DB.GetContext(ctx, &du, query, id)
 	if err != nil {
 		return nil, err
 	}
 
-	return &model.User{
+	u := &model.User{
 		ID:       du.ID,
 		Username: du.Username,
 		Email:    du.Email,
 		Password: du.Password,
-	}, nil
+	}
+
+	if du.Roles != "" {
+		u.Roles = strings.Split(du.Roles, ",")
+	}
+
+	return u, nil
 }
 
 // GetUser total is a total data, not pagination

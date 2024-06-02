@@ -254,3 +254,7 @@ type AuthPayload struct {
 	Email    string
 	Role     []string
 }
+
+type UserMeInput struct {
+	UserID int64
+}
