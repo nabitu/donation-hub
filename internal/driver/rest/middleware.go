@@ -24,12 +24,17 @@ func RecoverPanicMiddleware(next http.Handler) http.Handler {
 func authTokenMiddleware(next http.HandlerFunc, c *Config, isOptional bool, roles []string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
-
 		ctx := context.WithValue(r.Context(), "withAuth", false)
 
 		// if route authorization is optional
 		if isOptional && authHeader == "" {
 			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
+
+		// if route is must present token, but the token is empty. Problem: always return 200 if token not present, but is optional = false
+		if !isOptional && authHeader == "" {
+			ResponseErrorInvalidAccessToken(w, "invalid access token")
 			return
 		}
 
