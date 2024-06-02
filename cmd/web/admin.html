@@ -25,8 +25,12 @@
             <h1>Admin Dashboard</h1>
             <h2>Donation Projects</h2>
             <ul>
-                <li>Project Title 1 - Total Donations: $2500 (50%)</li>
-                <li>Project Title 2 - Total Donations: $0 (0%)</li>
+                <template x-for="project in projects">
+                    <li>
+                        <span x-text="project.title"></span> - Target Amount: <span x-text="project.target_amount"></span> <span x-text="project.currency"></span></span>
+                    </li>
+                </template>
+                <li x-show="hasNextPageProject"><a href="" @click.prevent="loadMoreProject">Load More</a></li>
             </ul>
             <h2>Donors</h2>
             <ul>
@@ -86,15 +90,34 @@
                     }
                     await this.getUserDonor();
                     await this.getUserRequester();
+                    await this.getProjects();
                 },
                 loadMoreDonor() {
-                    this.getUserRequester();
+                    this.getUserDonor();
                 },
                 loadMoreRequester() {
                     this.getUserRequester();
                 },
+                loadMoreProject() {
+                    this.getProjects();
+                },
                 async getProjects() {
-                    // todo get projects
+                    try {
+                        const response = await axios.get(`${this.baseUrl}/projects?limit=10&last_key=${this.lastKeyProject}`, {
+                            headers: {
+                                Authorization: `Bearer ${localStorage.getItem('token')}`
+                            }
+                        });
+                        this.projects = [...this.projects, ...response.data.data.projects]
+                        if (response.data.data.last_key !== "") {
+                            this.lastKeyProject = response.data.data.last_key;
+                            this.hasNextPageProject = true;
+                        } else {
+                            this.hasNextPageProject = false;
+                        }
+                    } catch (error) {
+                        console.error(error);
+                    }
                 },
                 async getUserDonor() {
                     try {
@@ -153,11 +176,14 @@
                 },
                 hasNextPageDonor: true,
                 hasNextPageRequester: true,
+                hasNextPageProject: false,
                 pageDonor: 1,
                 pageRequester: 1,
+                lastKeyProject: 1,
                 baseUrl: 'http://localhost:8180',
                 donorUsers: [],
                 requesterUsers: [],
+                projects: [],
             }
         }
     </script>
