@@ -55,7 +55,7 @@
             </div>
 
             <template x-for="image in form.image_urls" :key="image">
-                <img :src="image" alt="Project Image" class="img-fluid">
+                <img :src="image" alt="Project Image" class="img-fluid" style="height: 100px; height: 100px; position: relative">
             </template>
 
             <div class="form-group">
@@ -164,35 +164,33 @@
                     // upload image to signed url
                     const signedUrl = response.data.data.url;
 
-                    this.uploadToS3(signedUrl, file, (progress) => {
-                        console.log(progress)
-                    }).then((response) => {
-                        console.log(response)
-                        this.form.image_urls.push(response.data.data.url)
-                    }).catch((error) => {
-                        console.error('Error uploading image')
-                        console.error(error)
-                    })
-
+                    try {
+                        await this.uploadToS3(signedUrl, file)
+                        // add image url to form
+                        var url = signedUrl.split('?')[0];
+                        this.form.image_urls.push(url);
+                    } catch {
+                        alert('Error uploading image')
+                    }
                 },
-                async uploadToS3(uploadURL, file, onProgress) {
-                    return new Promise((resolve) => {
-                        const xhr = new XMLHttpRequest();
-                        xhr.upload.addEventListener("progress", e => {
-                            if (e.lengthComputable) {
-                                onProgress(e.loaded / e.total);
+                async uploadToS3(temporaryUploadUrl, file) {
+                    try {
+                        const response = await axios.put(temporaryUploadUrl, file, {
+                            headers: {
+                                'Content-Type': file.type
+                            },
+                            onUploadProgress: (progressEvent) => {
+                                const progress = Math.round((progressEvent.loaded / progressEvent.total) * 100);
+                                console.log(`Upload progress: ${progress}%`);
                             }
-                        })
-                        xhr.onreadystatechange = e => {
-                            if (xhr.readyState !== xhr.DONE) {
-                                return
-                            }
-                            resolve({status: xhr.status, body: xhr.responseText});
-                        }
-                        xhr.open("PUT", uploadURL, true);
-                        xhr.setRequestHeader("x-amz-acl", "public-read");
-                        xhr.send(file);
-                    });
+                        });
+                        console.log(response.data);
+                        return response;
+                    } catch (error) {
+                        console.error('Error uploading image');
+                        console.error(error);
+                        throw error;
+                    }
                 },
                 projectCreated: false,
                 mime: '',
@@ -205,8 +203,7 @@
                     target_amount: '',
                     currency: 'USD',
                     image_urls: [
-                        "https://via.placeholder.com/150x150?text=image1",
-                        "https://via.placeholder.com/150x150?text=image2",
+
                     ]
                 },
             }
