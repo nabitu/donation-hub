@@ -25,27 +25,30 @@
         <div x-show="projectCreated" class="alert alert-success" role="alert">
             Project created successfully. Your project will be review by admin.
         </div>
+        <div x-show="errorMessage" class="alert alert-danger" role="alert">
+            <span x-text="errorMessage"></span>
+        </div>
         <form @submit.prevent="submitProject">
             <div class="form-group">
                 <label for="projectName">Project Name</label>
-                <input type="text" class="form-control" id="projectName" placeholder="Enter project name" x-model="form.title">
+                <input type="text" class="form-control" id="projectName" placeholder="Enter project name" x-model="form.title" required>
             </div>
             <div class="form-group">
                 <label for="projectDescription">Project Description</label>
-                <textarea class="form-control" id="projectDescription" rows="3" placeholder="Enter project description" x-model="form.description"></textarea>
+                <textarea class="form-control" id="projectDescription" rows="3" placeholder="Enter project description" x-model="form.description" required></textarea>
             </div>
 
             <div class="form-group">
                 <label for="dueDate">Due Date</label>
-                <input type="date" class="form-control" id="dueDate" x-model="form.due_at">
+                <input type="date" class="form-control" id="dueDate" x-model="form.due_at" required>
             </div>
             <div class="form-group">
                 <label for="targetAmount">Target Amount</label>
-                <input type="number" class="form-control" id="targetAmount" placeholder="Enter target amount" x-model="form.target_amount">
+                <input type="number" class="form-control" id="targetAmount" placeholder="Enter target amount" x-model="form.target_amount" required>
             </div>
             <div class="form-group">
                 <label for="currency">Currency</label>
-                <select class="form-control" id="currency" x-model="form.currency">
+                <select class="form-control" id="currency" x-model="form.currency" required>
                     <option value="USD">USD</option>
                     <option value="EUR">EUR</option>
                     <option value="GBP">GBP</option>
@@ -118,7 +121,7 @@
                         console.log(response.data)
                         window.location.href = '/upload.html?create=success'
                     } catch (error) {
-                        console.error('Error creating project')
+                        this.errorMessage = error.response.data.msg;
                         console.error(error)
                     }
                 },
@@ -192,6 +195,7 @@
                         throw error;
                     }
                 },
+                errorMessage: false,
                 projectCreated: false,
                 mime: '',
                 filesize: 0,
