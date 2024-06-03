@@ -300,6 +300,7 @@
                     localStorage.removeItem('token')
                     this.isAuthenticated = false
                     this.admin = false
+                    this.requester = false
                 },
                 async checkForToken() {
                     console.log('Checking for token')
